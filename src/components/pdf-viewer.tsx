@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -23,13 +24,15 @@ type PdfViewerProps = {
 export default function PdfViewer({
   pdfUri,
   zoomLevel,
-  setTotalPages,
+  setTotalPages: setTotalPagesProp, // Ganti nama prop untuk menghindari konflik
   setApi,
 }: PdfViewerProps) {
   const { toast } = useToast();
+  const [totalPages, setTotalPages] = useState(0); // State lokal untuk totalPages
 
   function onDocumentLoadSuccess({ numPages }: PDFDocumentProxy): void {
     setTotalPages(numPages);
+    setTotalPagesProp(numPages); // Perbarui juga state di komponen induk
   }
 
   function onDocumentLoadError(error: Error) {
