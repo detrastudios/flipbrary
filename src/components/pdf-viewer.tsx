@@ -24,15 +24,15 @@ type PdfViewerProps = {
 export default function PdfViewer({
   pdfUri,
   zoomLevel,
-  setTotalPages: setTotalPagesProp, // Ganti nama prop untuk menghindari konflik
+  setTotalPages: setTotalPagesProp,
   setApi,
 }: PdfViewerProps) {
   const { toast } = useToast();
-  const [totalPages, setTotalPages] = useState(0); // State lokal untuk totalPages
+  const [totalPages, setTotalPages] = useState(0);
 
   function onDocumentLoadSuccess({ numPages }: PDFDocumentProxy): void {
     setTotalPages(numPages);
-    setTotalPagesProp(numPages); // Perbarui juga state di komponen induk
+    setTotalPagesProp(numPages);
   }
 
   function onDocumentLoadError(error: Error) {
@@ -50,34 +50,38 @@ export default function PdfViewer({
     <div className="h-full w-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
       {pdfUri ? (
         <Carousel setApi={setApi} className="w-full h-full">
-            <CarouselContent className="h-full">
-                 <Document
-                    file={pdfUri}
-                    onLoadSuccess={onDocumentLoadSuccess}
-                    onLoadError={onDocumentLoadError}
-                    loading={
-                        <div className="flex flex-col items-center justify-center h-full w-full text-muted-foreground">
-                        <LoaderCircle className="mr-2 h-6 w-6 animate-spin" />
-                        <span>Memuat PDF...</span>
-                        </div>
-                    }
-                    error={
-                        <div className="text-destructive">Gagal memuat file PDF.</div>
-                    }
-                 >
-                    {Array.from(new Array(totalPages), (el, index) => (
-                        <CarouselItem key={`page_${index + 1}`} className="h-full flex justify-center items-center overflow-auto">
-                            <Page
-                                pageNumber={index + 1}
-                                scale={zoomLevel}
-                                renderTextLayer={true}
-                                renderAnnotationLayer={false}
-                                className="shadow-lg"
-                            />
-                        </CarouselItem>
-                    ))}
-                </Document>
-            </CarouselContent>
+          <CarouselContent className="h-full">
+            <Document
+              file={pdfUri}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading={
+                <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
+                  <LoaderCircle className="h-6 w-6 animate-spin" />
+                  <span>Memuat PDF...</span>
+                </div>
+              }
+              error={
+                <div className="w-full h-full flex flex-col items-center justify-center text-destructive">
+                  Gagal memuat file PDF.
+                </div>
+              }
+            >
+              {Array.from(new Array(totalPages), (el, index) => (
+                <CarouselItem key={`page_${index + 1}`} className="h-full flex justify-center items-center overflow-auto">
+                   <div className="p-4">
+                    <Page
+                        pageNumber={index + 1}
+                        scale={zoomLevel}
+                        renderTextLayer={true}
+                        renderAnnotationLayer={false}
+                        className="shadow-lg"
+                    />
+                   </div>
+                </CarouselItem>
+              ))}
+            </Document>
+          </CarouselContent>
         </Carousel>
       ) : (
         <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground h-full">
