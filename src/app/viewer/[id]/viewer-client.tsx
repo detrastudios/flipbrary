@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useDebounce } from "@/hooks/use-debounce";
 import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
@@ -13,12 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Menu, ArrowLeft } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
 import Link from 'next/link';
+import type { CarouselApi } from "@/components/ui/carousel";
 
 const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-800">
-      <Skeleton className="h-[80vh] w-[80%]" />
+      <Skeleton className="h-full w-full" />
     </div>
   ),
 });
@@ -40,7 +41,8 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [ebookId, setEbookId] = useState<number | null>(null);
-  
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
@@ -96,6 +98,18 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     }
   }, [debouncedSearchTerm, toast]);
 
+  useEffect(() => {
+    if (!carouselApi) {
+      return
+    }
+ 
+    setCurrentPage(carouselApi.selectedScrollSnap() + 1)
+ 
+    carouselApi.on("select", () => {
+      setCurrentPage(carouselApi.selectedScrollSnap() + 1)
+    })
+  }, [carouselApi])
+
 
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 0.2, 2));
@@ -103,14 +117,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
 
   const handleZoomOut = () => {
     setZoomLevel((prev) => Math.max(prev - 0.2, 0.4));
-  };
-
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,8 +128,8 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-gray-900">
-       <header className="flex items-center justify-between p-2 border-b bg-background shadow-sm">
+    <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
+       <header className="flex items-center justify-between p-2 border-b bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
         <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" asChild>
                 <Link href="/">
@@ -131,7 +137,14 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
                     <span className="sr-only">Kembali ke Library</span>
                 </Link>
             </Button>
-            <h1 className="text-lg font-semibold truncate">PDF Viewer</h1>
+            <div className="flex flex-col">
+              <h1 className="text-lg font-semibold truncate">PDF Viewer</h1>
+              {totalPages > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Halaman {currentPage} dari {totalPages}
+                </p>
+              )}
+            </div>
         </div>
         
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -141,7 +154,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
               <span className="sr-only">Buka Panel Kontrol</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-full sm:max-w-md">
+          <SheetContent side="right" className="w-full sm:max-w-md z-30">
              <SheetHeader>
                 <SheetTitle>Panel Kontrol</SheetTitle>
                 <SheetDescription>
@@ -154,22 +167,21 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
               suggestedTerms={suggestedTerms}
               isSearching={isSearching}
               onSuggestedTermClick={handleSuggestedTermClick}
+              zoomLevel={zoomLevel}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              pdfLoaded={!!pdfDataUri}
             />
           </SheetContent>
         </Sheet>
       </header>
 
-      <main className="flex-1 relative p-4 md:p-8 flex items-center justify-center">
+      <main className="flex-1 relative flex items-center justify-center overflow-hidden">
         <PdfViewer
             pdfUri={pdfDataUri}
             zoomLevel={zoomLevel}
-            onZoomIn={handleZoomIn}
-            onZoomOut={handleZoomOut}
-            currentPage={currentPage}
-            onPrevPage={handlePrevPage}
-            onNextPage={handleNextPage}
-            totalPages={totalPages}
             setTotalPages={setTotalPages}
+            setApi={setCarouselApi}
         />
       </main>
     </div>
