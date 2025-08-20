@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useDebounce } from "@/hooks/use-debounce";
 import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
@@ -40,7 +40,7 @@ export default function ViewerPage({ params }: ViewerPageProps) {
   
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  const ebookId = parseInt(params.id, 10);
+  const ebookId = useMemo(() => parseInt(params.id, 10), [params.id]);
 
   useEffect(() => {
     if (!isNaN(ebookId)) {
