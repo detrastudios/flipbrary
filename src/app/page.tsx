@@ -8,9 +8,6 @@ import ControlPanel from "@/components/control-panel";
 import PdfViewer from "@/components/pdf-viewer";
 import { useToast } from "@/hooks/use-toast";
 
-// A dummy Base64 encoded PDF for demonstration purposes.
-const DUMMY_PDF_DATA_URI = 'data:application/pdf;base64,JVBERi0xLjcKJeLjz9MKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFIvTGFuZyhlbi1VUykgL1N0cnVjdFRyZWVSb290IDEwIDAgUi9NYXJrSW5mbzw8L01hcmtlZCB0cnVlPj4+PgplbmRvYmoKMiAwIG9iago8PC9UeXBlL1BhZ2VzL0NvdW50IDEvS2lkc1sgMyAwIFJdID4+CmVuZG9iagozIDAgb2JqCjw8L1R5cGUvUGFnZS9QYXJlbnQgMiAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDUgMCBSPj4vUHJvY1NldFsvUERGL1RleHQvSW1hZ2VCL0ltYWdlQy9JbWFnZUldID4+L01lZGlhQm94WzAgMCA2MTIgNzkyXS9Db250ZW50cyA0IDAgUi9Hcm91cDw8L1R5cGUvR3JvdXAvUy9UcmFuc3BhcmVuY3kvQ1MvRGV2aWNlUkdCPj4vVGFicy9TL1N0cnVjdFBhcmVudHMgMD4+CmVuZG9iago0IDAgb2JqCjw8L0ZpbHRlci9GbGF0ZURlY29kZS9MZW5ndGggNjg+PgpzdHJlYW0KeJwr5HIK4TIyUkhUNDYxNFFwSElNTjRUcE9WMlJTRgsoylZIK1EoSk3MUVIqys/iChZUCElMydLMTUxNLAIKFWECSSkKS2BgBgAATQgWZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8L1R5cGUvRm9udC9TdWJ0eXBlL1R5cGUxL0Jhc2VGb250L0hlbHZldGljYS9FbmNvZGluZy9XaW5BbnNpRW5jb2Rpbmc+PgplbmRvYmoKNiAwIG9iago8PC9MZW5ndGggMTg0L04gMy9BbHQgMTQwL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp4nE2Qz0rCMBDG3/sVey69wYsbp55EQRBBRJdQv6DP+Q/SVJDEu6R//51NExVBEHwzOzM7wYJm73o0DqwbwYo2r4P+y8F827QXD6aKdl4YxQ4j+w9pDhbha4f50lRKYwZ71kHOFUI5w6f41UuJpODGZmZl2YBDp7lxz0N+Dxv5F7eGPnE0jJBEs4WwbFqU5hQj21kRpZW2bklGv53d9u23wP19N5Cjx7Psm++1p42GKycbx/KSr1858ZmuoLfXvE/w8q3CIMYHA6r/A3sO0VBlZWZ6C+gS+4gZRODmmGkMhUSjJbAT3kP/y3wEr2hxdVl3kCjy6EskL7rAE3WvQARZWJlbW5zdHJlYW0KZW5kb2JqCnhyZWYKMCAwCnRyYWlsZXIKPDwvU2l6ZSA3L1Jvb3QgMSAwIFIvSW5mbyA2IDAgUj4+CnN0YXJ0eHJlZgo2NDcKJSVFT0YK';
-
 export default function Home() {
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
@@ -20,6 +17,8 @@ export default function Home() {
   const [isSearching, setIsSearching] = useState(false);
   const [summary, setSummary] = useState("");
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
+  const [pdfFileName, setPdfFileName] = useState<string | null>(null);
 
   const totalPages = 10; // Mock total pages
 
@@ -49,10 +48,18 @@ export default function Home() {
   }, [debouncedSearchTerm, toast]);
 
   const handleSummarize = useCallback(async () => {
+    if (!pdfDataUri) {
+      toast({
+        variant: "destructive",
+        title: "No PDF Selected",
+        description: "Please upload a PDF file to summarize.",
+      });
+      return;
+    }
     setIsSummarizing(true);
     setSummary("");
     try {
-      const result = await summarizePdf({ pdfDataUri: DUMMY_PDF_DATA_URI });
+      const result = await summarizePdf({ pdfDataUri });
       setSummary(result.summary);
     } catch (error) {
       toast({
@@ -64,7 +71,29 @@ export default function Home() {
     } finally {
       setIsSummarizing(false);
     }
-  }, [toast]);
+  }, [pdfDataUri, toast]);
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type !== "application/pdf") {
+        toast({
+          variant: "destructive",
+          title: "Invalid File Type",
+          description: "Please upload a valid PDF file.",
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUri = e.target?.result as string;
+        setPdfDataUri(dataUri);
+        setPdfFileName(file.name);
+        setSummary(""); // Clear previous summary
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleNextPage = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
@@ -110,6 +139,9 @@ export default function Home() {
               onSummarize={handleSummarize}
               summary={summary}
               isSummarizing={isSummarizing}
+              onFileChange={handleFileChange}
+              pdfFileName={pdfFileName}
+              isPdfUploaded={!!pdfDataUri}
             />
           </div>
 

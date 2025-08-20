@@ -1,9 +1,10 @@
 "use client";
 
-import { Search, FileText, LoaderCircle } from "lucide-react";
+import { Search, FileText, LoaderCircle, Upload, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -16,6 +17,9 @@ type ControlPanelProps = {
   onSummarize: () => void;
   summary: string;
   isSummarizing: boolean;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  pdfFileName: string | null;
+  isPdfUploaded: boolean;
 };
 
 export default function ControlPanel({
@@ -27,6 +31,9 @@ export default function ControlPanel({
   onSummarize,
   summary,
   isSummarizing,
+  onFileChange,
+  pdfFileName,
+  isPdfUploaded,
 }: ControlPanelProps) {
   return (
     <Tabs defaultValue="search" className="w-full">
@@ -91,7 +98,22 @@ export default function ControlPanel({
             <CardDescription>Generate a concise summary of the document.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button onClick={onSummarize} disabled={isSummarizing} className="w-full">
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <Label htmlFor="pdf-upload">Upload PDF</Label>
+              <div className="relative">
+                <Input id="pdf-upload" type="file" className="w-full pr-12" onChange={onFileChange} accept=".pdf" />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  {isPdfUploaded ? (
+                     <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                     <Upload className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+              {pdfFileName && <p className="text-xs text-muted-foreground mt-1 truncate">File: {pdfFileName}</p>}
+            </div>
+
+            <Button onClick={onSummarize} disabled={isSummarizing || !isPdfUploaded} className="w-full">
               {isSummarizing ? (
                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -101,7 +123,7 @@ export default function ControlPanel({
             </Button>
             <ScrollArea className="h-40 w-full rounded-md border">
               <p className="p-4 text-sm text-muted-foreground">
-                {summary || "Click the button to generate a summary."}
+                {summary || "Upload a PDF and click the button to generate a summary."}
               </p>
             </ScrollArea>
           </CardContent>
