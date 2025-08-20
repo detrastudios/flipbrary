@@ -72,10 +72,10 @@ export default function PdfViewer({
                    <div className="p-4">
                     <Page
                         pageNumber={index + 1}
-                        scale={zoomLevel}
                         renderTextLayer={true}
                         renderAnnotationLayer={false}
                         className="shadow-lg"
+                        scale={zoomLevel}
                     />
                    </div>
                 </CarouselItem>
