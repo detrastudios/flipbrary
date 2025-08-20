@@ -2,6 +2,7 @@
 import ViewerPageClient from "./viewer-client";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import React from 'react';
 
 export default function ViewerPage({ params }: { params: { id: string } }) {
   // Akses params.id secara langsung di Server Component
