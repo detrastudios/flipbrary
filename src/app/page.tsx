@@ -123,27 +123,26 @@ export default function LibraryPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="ebook-name" className="text-right">
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <Label htmlFor="ebook-name">
                 Nama Ebook
               </Label>
               <Input
                 id="ebook-name"
                 value={newEbookName}
                 onChange={(e) => setNewEbookName(e.target.value)}
-                className="col-span-3"
                 placeholder="Contoh: Novel Sejarah"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="pdf-upload" className="text-right">
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <Label htmlFor="pdf-upload">
                 File PDF
               </Label>
-               <Input id="pdf-upload" type="file" onChange={handleFileChange} accept=".pdf" className="col-span-3"/>
+               <Input id="pdf-upload" type="file" onChange={handleFileChange} accept=".pdf"/>
             </div>
-             {fileError && <p className="col-span-4 text-sm text-red-500 text-center -mt-2">{fileError}</p>}
+             {fileError && <p className="text-sm text-red-500 -mt-2">{fileError}</p>}
              {selectedFile && !fileError && (
-                <div className="col-start-2 col-span-3 flex items-center space-x-2 text-sm text-muted-foreground p-2 bg-muted rounded-md">
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground p-2 bg-muted rounded-md">
                    <FileText className="h-4 w-4 flex-shrink-0" />
                    <span className="truncate flex-grow" title={selectedFile.name}>{selectedFile.name}</span>
                 </div>
@@ -195,5 +194,3 @@ export default function LibraryPage() {
     </div>
   );
 }
-
-    
