@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -17,12 +17,14 @@ type PdfViewerProps = {
   pdfUri: string | null;
   setTotalPages: (pages: number) => void;
   setApi?: (api: CarouselApi) => void;
+  zoomLevel: number; // Tambahkan prop ini
 };
 
 export default function PdfViewer({
   pdfUri,
   setTotalPages: setTotalPagesProp,
   setApi,
+  zoomLevel, // Gunakan prop ini
 }: PdfViewerProps) {
   const { toast } = useToast();
   const [numPages, setNumPages] = useState(0);
@@ -31,7 +33,6 @@ export default function PdfViewer({
     setNumPages(nextNumPages);
     setTotalPagesProp(nextNumPages);
   }, [setTotalPagesProp]);
-
 
   function onDocumentLoadError(error: Error) {
     if (error.name === 'AbortException') {
@@ -71,6 +72,7 @@ export default function PdfViewer({
                                 renderTextLayer={true}
                                 renderAnnotationLayer={false}
                                 className="shadow-lg mx-auto"
+                                scale={zoomLevel} // Perbaikan: Tambahkan properti scale
                             />
                         </CarouselItem>
                     ))}

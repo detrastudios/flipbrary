@@ -9,7 +9,7 @@ import ControlPanel from "@/components/control-panel";
 import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ArrowLeft, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Menu, ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
 import Link from 'next/link';
 import type { CarouselApi } from "@/components/ui/carousel";
@@ -41,6 +41,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [ebookId, setEbookId] = useState<number | null>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
+  const [zoomLevel, setZoomLevel] = useState(1.0); // State baru: zoomLevel
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -127,6 +128,14 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     carouselApi?.scrollPrev();
   }, [carouselApi]);
 
+  const handleZoomIn = useCallback(() => {
+    setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 2.0));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoomLevel(prevZoom => Math.max(prevZoom - 0.1, 0.5));
+  }, []);
+
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
        <header className="flex items-center justify-between p-2 border-b bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
@@ -140,6 +149,16 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
             <div className="flex flex-col">
               <h1 className="text-lg font-semibold truncate">PDF Viewer</h1>
             </div>
+        </div>
+        {/* Tambahkan tombol zoom di sini */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={handleZoomOut} disabled={zoomLevel <= 0.5}>
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-medium w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
+          <Button variant="outline" size="icon" onClick={handleZoomIn} disabled={zoomLevel >= 2.0}>
+            <ZoomIn className="h-4 w-4" />
+          </Button>
         </div>
         
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -173,6 +192,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
             pdfUri={pdfDataUri}
             setTotalPages={setTotalPages}
             setApi={setCarouselApi}
+            zoomLevel={zoomLevel} // Perbaikan: Teruskan prop zoomLevel
         />
       </main>
 
