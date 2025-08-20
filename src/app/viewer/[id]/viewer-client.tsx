@@ -1,10 +1,9 @@
+
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
-import { useDebounce } from "@/hooks/use-debounce";
-import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
-import ControlPanel from "@/components/control-panel";
+import SettingsPanel from "@/components/control-panel";
 import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -33,16 +32,11 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [suggestedTerms, setSuggestedTerms] = useState<string[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [ebookId, setEbookId] = useState<number | null>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
   const [zoomLevel, setZoomLevel] = useState(1.0); 
-
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
     if (id) {
@@ -73,28 +67,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     }
   }, [ebookId, getEbookById, toast]);
 
-  useEffect(() => {
-    if (debouncedSearchTerm) {
-      setIsSearching(true);
-      improveSearchTerms({ searchTerm: debouncedSearchTerm })
-        .then((response) => {
-          setSuggestedTerms(response.relatedTerms);
-        })
-        .catch((error) => {
-          console.error("Gagal mendapatkan saran:", error);
-          toast({
-            variant: "destructive",
-            title: "AI Error",
-            description: "Gagal mendapatkan saran pencarian dari AI.",
-          });
-        })
-        .finally(() => {
-          setIsSearching(false);
-        });
-    } else {
-      setSuggestedTerms([]);
-    }
-  }, [debouncedSearchTerm, toast]);
 
   useEffect(() => {
     if (!carouselApi) return;
@@ -111,13 +83,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     };
   }, [carouselApi]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleSuggestedTermClick = (term: string) => {
-    setSearchTerm(term);
-  };
 
   const handleNextPage = useCallback(() => {
     carouselApi?.scrollNext();
@@ -163,24 +128,17 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
               <Menu className="h-6 w-6" />
-              <span className="sr-only">Buka Panel Kontrol</span>
+              <span className="sr-only">Buka Pengaturan</span>
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-full sm:max-w-md z-30">
              <SheetHeader>
-                <SheetTitle>Panel Kontrol</SheetTitle>
+                <SheetTitle>Pengaturan</SheetTitle>
                 <SheetDescription>
-                    Gunakan fitur di bawah untuk berinteraksi dengan PDF Anda.
+                    Kelola preferensi dan lihat informasi aplikasi di sini.
                 </SheetDescription>
             </SheetHeader>
-            <ControlPanel
-              searchTerm={searchTerm}
-              onSearchChange={handleSearchChange}
-              suggestedTerms={suggestedTerms}
-              isSearching={isSearching}
-              onSuggestedTermClick={handleSuggestedTermClick}
-              pdfLoaded={!!pdfDataUri}
-            />
+            <SettingsPanel />
           </SheetContent>
         </Sheet>
       </header>
