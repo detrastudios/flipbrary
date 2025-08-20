@@ -26,6 +26,9 @@ interface EbookDB extends DBSchema {
 let dbPromise: Promise<IDBPDatabase<EbookDB>> | null = null;
 
 const getDb = () => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
   if (!dbPromise) {
     dbPromise = openDB<EbookDB>(DB_NAME, DB_VERSION, {
       upgrade(db, oldVersion) {
@@ -54,6 +57,8 @@ const createPdfThumbnail = async (file: File | Blob): Promise<string> => {
         if (typeof data !== 'string') {
           return reject(new Error('Gagal membaca file PDF.'));
         }
+        
+        // `data` sudah dalam format data URL (e.g., "data:application/pdf;base64,...")
         const pdf = await pdfjs.getDocument({ data }).promise;
         const page = await pdf.getPage(1);
         
@@ -85,6 +90,7 @@ export function useIndexedDB() {
 
   const getAllEbooks = useCallback(async () => {
     const db = await getDb();
+    if (!db) return;
     const allEbooks = await db.getAll(STORE_NAME);
     setEbooks(allEbooks);
     setLoading(false);
@@ -96,6 +102,7 @@ export function useIndexedDB() {
 
   const addEbook = async (ebook: Omit<Ebook, 'id' | 'thumbnailUrl'>) => {
     const db = await getDb();
+    if (!db) return;
     const thumbnailUrl = await createPdfThumbnail(ebook.data);
     const ebookWithThumbnail: Omit<Ebook, 'id'> = { ...ebook, thumbnailUrl };
     await db.add(STORE_NAME, ebookWithThumbnail as Ebook);
@@ -104,12 +111,14 @@ export function useIndexedDB() {
 
   const deleteEbook = async (id: number) => {
     const db = await getDb();
+    if (!db) return;
     await db.delete(STORE_NAME, id);
     await getAllEbooks(); // Refresh list
   };
   
   const getEbookById = useCallback(async (id: number) => {
     const db = await getDb();
+    if (!db) return undefined;
     return db.get(STORE_NAME, id);
   }, []);
 
