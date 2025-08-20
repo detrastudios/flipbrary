@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
 import ControlPanel from "@/components/control-panel";
@@ -10,14 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 export default function Home() {
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestedTerms, setSuggestedTerms] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [pdfFileName, setPdfFileName] = useState<string | null>(null);
-
-  const totalPages = 10; // Mock total pages
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -61,6 +60,7 @@ export default function Home() {
         setPdfDataUri(dataUri);
         setPdfFileName(file.name);
         setCurrentPage(1); // Reset to first page on new file
+        setTotalPages(0); // Reset total pages
       };
       reader.readAsDataURL(file);
     }
@@ -118,6 +118,7 @@ export default function Home() {
               pdfUri={pdfDataUri}
               currentPage={currentPage}
               totalPages={totalPages}
+              setTotalPages={setTotalPages}
               zoomLevel={zoomLevel}
               onPrevPage={handlePrevPage}
               onNextPage={handleNextPage}

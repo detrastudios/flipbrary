@@ -1,13 +1,27 @@
 "use client";
 
-import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, FileQuestion } from "lucide-react";
+import { useState } from "react";
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, FileQuestion, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import type { PDFDocumentProxy } from 'pdfjs-dist';
+
+// Set worker path for pdfjs
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
+
 
 type PdfViewerProps = {
   pdfUri: string | null;
   currentPage: number;
   totalPages: number;
+  setTotalPages: (pages: number) => void;
   zoomLevel: number;
   onPrevPage: () => void;
   onNextPage: () => void;
@@ -19,30 +33,53 @@ export default function PdfViewer({
   pdfUri,
   currentPage,
   totalPages,
+  setTotalPages,
   zoomLevel,
   onPrevPage,
   onNextPage,
   onZoomIn,
   onZoomOut,
 }: PdfViewerProps) {
+  const { toast } = useToast();
+
+  function onDocumentLoadSuccess({ numPages }: PDFDocumentProxy): void {
+    setTotalPages(numPages);
+  }
+
+  function onDocumentLoadError(error: Error) {
+    toast({
+      variant: "destructive",
+      title: "Gagal memuat PDF",
+      description: error.message,
+    });
+  }
+
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-4 bg-muted/20">
         <div className="overflow-auto h-[70vh] rounded-md flex items-center justify-center bg-gray-200 dark:bg-gray-800">
           {pdfUri ? (
-            <div
-              className="transition-transform duration-200"
-              style={{ transform: `scale(${zoomLevel})` }}
-            >
-              {/* This is a simplified viewer. A real implementation would use a library like react-pdf */}
-              <iframe
-                src={`${pdfUri}#page=${currentPage}&toolbar=0&navpanes=0`}
-                width={800}
-                height={1131}
-                className="shadow-lg border-0"
-                title="Penampil PDF"
-              />
-            </div>
+             <Document
+                file={pdfUri}
+                onLoadSuccess={onDocumentLoadSuccess}
+                onLoadError={onDocumentLoadError}
+                loading={
+                  <div className="flex items-center text-muted-foreground">
+                    <LoaderCircle className="mr-2 h-6 w-6 animate-spin" />
+                    <span>Memuat PDF...</span>
+                  </div>
+                }
+                error={
+                  <div className="text-destructive">Gagal memuat file PDF.</div>
+                }
+             >
+                <Page
+                    pageNumber={currentPage}
+                    scale={zoomLevel}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                />
+             </Document>
           ) : (
             <div className="flex flex-col items-center gap-4 text-muted-foreground">
               <FileQuestion className="h-16 w-16" />
