@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useDebounce } from "@/hooks/use-debounce";
 import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
@@ -37,13 +37,22 @@ export default function ViewerPage({ params }: ViewerPageProps) {
   const [isSearching, setIsSearching] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
+  const [ebookId, setEbookId] = useState<number | null>(null);
   
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  const ebookId = useMemo(() => parseInt(params.id, 10), [params.id]);
+  useEffect(() => {
+    if (params.id) {
+        const id = parseInt(params.id, 10);
+        if (!isNaN(id)) {
+            setEbookId(id);
+        }
+    }
+  }, [params.id]);
+
 
   useEffect(() => {
-    if (!isNaN(ebookId)) {
+    if (ebookId !== null) {
         getEbookById(ebookId).then(ebook => {
             if (ebook && ebook.data instanceof Blob) {
                 const reader = new FileReader();
