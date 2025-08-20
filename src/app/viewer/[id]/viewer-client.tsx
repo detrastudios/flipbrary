@@ -40,7 +40,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [ebookId, setEbookId] = useState<number | null>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
-  const [zoomLevel, setZoomLevel] = useState(1.0); // State baru: zoomLevel
+  const [zoomLevel, setZoomLevel] = useState(1.0); 
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 

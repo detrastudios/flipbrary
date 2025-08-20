@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -27,6 +27,8 @@ export default function PdfViewer({
 }: PdfViewerProps) {
   const { toast } = useToast();
   const [numPages, setNumPages] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: PDFDocumentProxy): void => {
     setNumPages(nextNumPages);
@@ -44,8 +46,23 @@ export default function PdfViewer({
     });
   }
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.clientWidth);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
-    <div className="h-full w-full flex items-center justify-center">
+    <div ref={containerRef} className="h-full w-full flex items-center justify-center">
       {pdfUri ? (
         <Document
             file={pdfUri}
@@ -72,7 +89,7 @@ export default function PdfViewer({
                                     renderTextLayer={true}
                                     renderAnnotationLayer={false}
                                     className="shadow-lg mx-auto"
-                                    scale={zoomLevel}
+                                    width={containerWidth ? (containerWidth - 32) * zoomLevel : undefined}
                                 />
                             </div>
                         </CarouselItem>
