@@ -5,16 +5,13 @@ import React, { useState, useCallback } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-import { FileQuestion, LoaderCircle } from "lucide-react";
+import { FileQuestion } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
-import { useResizeObserver } from '@wojtekmaj/react-hooks';
 import { Skeleton } from './ui/skeleton';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-
-const resizeObserverOptions = {};
 
 type PdfViewerProps = {
   pdfUri: string | null;
@@ -31,17 +28,6 @@ export default function PdfViewer({
 }: PdfViewerProps) {
   const { toast } = useToast();
   const [numPages, setNumPages] = useState(0);
-  const [containerRef, setContainerRef] = useState<HTMLElement | null>(null);
-  const [containerWidth, setContainerWidth] = useState<number>();
-
-  const onResize = useCallback<any>(() => {
-     if(containerRef) {
-      setContainerWidth(containerRef.clientWidth);
-     }
-  }, [containerRef]);
-
-  useResizeObserver(containerRef, resizeObserverOptions, onResize);
-
 
   const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: PDFDocumentProxy): void => {
     setNumPages(nextNumPages);
@@ -61,7 +47,7 @@ export default function PdfViewer({
   }
 
   return (
-    <div ref={setContainerRef} className="h-full w-full">
+    <div className="h-full w-full">
       {pdfUri ? (
         <Document
             file={pdfUri}
@@ -81,16 +67,15 @@ export default function PdfViewer({
             <Carousel setApi={setApi} className="w-full h-full">
                 <CarouselContent className="h-full">
                     {Array.from(new Array(numPages), (el, index) => (
-                    <CarouselItem key={`page_${index + 1}`} className="h-full flex justify-center items-start overflow-y-auto">
-                        <Page
-                            pageNumber={index + 1}
-                            renderTextLayer={true}
-                            renderAnnotationLayer={false}
-                            className="shadow-lg"
-                            width={containerWidth ? containerWidth : undefined}
-                            scale={zoomLevel}
-                        />
-                    </CarouselItem>
+                        <CarouselItem key={`page_${index + 1}`} className="h-full flex justify-center items-center">
+                            <Page
+                                pageNumber={index + 1}
+                                renderTextLayer={true}
+                                renderAnnotationLayer={false}
+                                className="shadow-lg"
+                                scale={zoomLevel}
+                            />
+                        </CarouselItem>
                     ))}
                 </CarouselContent>
             </Carousel>
@@ -104,3 +89,4 @@ export default function PdfViewer({
     </div>
   );
 }
+
