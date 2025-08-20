@@ -33,7 +33,7 @@ export default function PdfViewer({
 
   useEffect(() => {
     setIsZooming(true);
-    const timer = setTimeout(() => setIsZooming(false), 300);
+    const timer = setTimeout(() => setIsZooming(false), 300); // Sesuaikan durasi jika perlu
     return () => clearTimeout(timer);
   }, [zoomLevel]);
 
@@ -43,6 +43,7 @@ export default function PdfViewer({
   }
 
   function onDocumentLoadError(error: Error) {
+    // Peringatan AbortException tidak berbahaya dan dapat diabaikan
     if (error.name === 'AbortException') {
         return;
     }
@@ -76,7 +77,7 @@ export default function PdfViewer({
                   key={`page_${index + 1}`}
                   pageNumber={index + 1}
                   scale={zoomLevel}
-                  renderTextLayer={!isZooming}
+                  renderTextLayer={!isZooming} // Nonaktifkan renderTextLayer saat zoom
                   renderAnnotationLayer={false}
                   className="mb-4 shadow-lg"
                 />
