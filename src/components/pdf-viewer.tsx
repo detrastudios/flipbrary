@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -10,32 +9,24 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
-// Set worker path for pdfjs
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-
 
 type PdfViewerProps = {
   pdfUri: string | null;
-  currentPage: number;
-  totalPages: number;
-  setTotalPages: (pages: number) => void;
   zoomLevel: number;
-  onPrevPage: () => void;
-  onNextPage: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
+  totalPages: number;
+  setTotalPages: (pages: number) => void;
 };
 
 export default function PdfViewer({
   pdfUri,
-  currentPage,
-  totalPages,
-  setTotalPages,
   zoomLevel,
-  onPrevPage,
-  onNextPage,
   onZoomIn,
   onZoomOut,
+  totalPages,
+  setTotalPages
 }: PdfViewerProps) {
   const { toast } = useToast();
 
@@ -105,17 +96,9 @@ export default function PdfViewer({
         </div>
         <div className="flex-1 h-px bg-border mx-4"></div>
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={onPrevPage} disabled={!pdfUri || currentPage <= 1}>
-                <ChevronLeft className="h-4 w-4" />
-                <span className="sr-only">Halaman Sebelumnya</span>
-            </Button>
             <span className="text-sm font-medium w-24 text-center">
-                Halaman {pdfUri ? currentPage : "-"} dari {pdfUri ? totalPages : "-"}
+                Total Halaman: {pdfUri ? totalPages : "-"}
             </span>
-            <Button variant="outline" size="icon" onClick={onNextPage} disabled={!pdfUri || currentPage >= totalPages}>
-                <ChevronRight className="h-4 w-4" />
-                <span className="sr-only">Halaman Berikutnya</span>
-            </Button>
         </div>
       </CardFooter>
     </Card>

@@ -19,14 +19,13 @@ const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
 
 export default function Home() {
   const { toast } = useToast();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestedTerms, setSuggestedTerms] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [pdfFileName, setPdfFileName] = useState<string | null>(null);
+  const [totalPages, setTotalPages] = useState(0);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -69,19 +68,10 @@ export default function Home() {
         const dataUri = e.target?.result as string;
         setPdfDataUri(dataUri);
         setPdfFileName(file.name);
-        setCurrentPage(1); // Reset to first page on new file
-        setTotalPages(0); // Reset total pages
+        setTotalPages(0);
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
-
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
   const handleZoomIn = () => {
@@ -126,14 +116,11 @@ export default function Home() {
           <div className="md:col-span-8 lg:col-span-9">
             <PdfViewer
               pdfUri={pdfDataUri}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              setTotalPages={setTotalPages}
               zoomLevel={zoomLevel}
-              onPrevPage={handlePrevPage}
-              onNextPage={handleNextPage}
               onZoomIn={handleZoomIn}
               onZoomOut={handleZoomOut}
+              totalPages={totalPages}
+              setTotalPages={setTotalPages}
             />
           </div>
         </div>
