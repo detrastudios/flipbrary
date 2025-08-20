@@ -7,7 +7,7 @@ import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
 import ControlPanel from "@/components/control-panel";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { PanelLeft } from "lucide-react";
 
@@ -102,7 +102,11 @@ export default function Home() {
             <span className="sr-only">Buka Panel Kontrol</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+        <SheetContent side="left" className="w-[300px] sm:w-[400px] flex flex-col">
+          <SheetHeader>
+            <SheetTitle>Kontrol</SheetTitle>
+            <SheetDescription>Unggah & cari di dalam PDF Anda.</SheetDescription>
+          </SheetHeader>
            <ControlPanel
               searchTerm={searchTerm}
               onSearchChange={handleSearchChange}
