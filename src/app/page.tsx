@@ -1,59 +1,36 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
-import { useDebounce } from "@/hooks/use-debounce";
-import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
-import ControlPanel from "@/components/control-panel";
-import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { PanelLeft } from "lucide-react";
+import { Upload, BookOpen } from "lucide-react";
+import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
-const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-screen flex items-center justify-center">
-      <Skeleton className="w-full h-full" />
-    </div>
-  ),
-});
+type Ebook = {
+  id: string;
+  name: string;
+  dataUri: string;
+};
 
-export default function Home() {
+export default function LibraryPage() {
   const { toast } = useToast();
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [suggestedTerms, setSuggestedTerms] = useState<string[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
-  const [pdfFileName, setPdfFileName] = useState<string | null>(null);
-  const [totalPages, setTotalPages] = useState(0);
-
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [ebooks, setEbooks] = useState<Ebook[]>([]);
 
   useEffect(() => {
-    if (debouncedSearchTerm) {
-      setIsSearching(true);
-      setSuggestedTerms([]);
-      improveSearchTerms({ searchTerm: debouncedSearchTerm })
-        .then((result) => {
-          setSuggestedTerms(result.relatedTerms);
-        })
-        .catch(() => {
-          toast({
-            variant: "destructive",
-            title: "Search Error",
-            description: "Could not fetch suggested search terms.",
-          });
-        })
-        .finally(() => {
-          setIsSearching(false);
-        });
-    } else {
-      setSuggestedTerms([]);
+    try {
+      const storedEbooks = localStorage.getItem("ebook-library");
+      if (storedEbooks) {
+        setEbooks(JSON.parse(storedEbooks));
+      }
+    } catch (error) {
+      console.error("Gagal memuat ebook dari localStorage", error);
+      toast({
+        variant: "destructive",
+        title: "Gagal Memuat Library",
+        description: "Tidak dapat memuat data ebook dari browser Anda.",
+      });
     }
-  }, [debouncedSearchTerm, toast]);
+  }, [toast]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -61,73 +38,107 @@ export default function Home() {
       if (file.type !== "application/pdf") {
         toast({
           variant: "destructive",
-          title: "Invalid File Type",
-          description: "Please upload a valid PDF file.",
+          title: "Jenis File Tidak Valid",
+          description: "Silakan unggah file PDF yang valid.",
         });
         return;
       }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUri = e.target?.result as string;
-        setPdfDataUri(dataUri);
-        setPdfFileName(file.name);
-        setTotalPages(0); // Reset pages when new file is uploaded
+        const newEbook: Ebook = {
+          id: `${Date.now()}-${file.name.replace(/\s/g, "-")}`,
+          name: file.name,
+          dataUri,
+        };
+        
+        setEbooks((prevEbooks) => {
+          const updatedEbooks = [...prevEbooks, newEbook];
+          try {
+            localStorage.setItem("ebook-library", JSON.stringify(updatedEbooks));
+            toast({
+              title: "Unggah Berhasil",
+              description: `"${file.name}" telah ditambahkan ke library Anda.`,
+            });
+          } catch (error) {
+            console.error("Gagal menyimpan ebook ke localStorage", error);
+            toast({
+              variant: "destructive",
+              title: "Gagal Menyimpan Ebook",
+              description: "Tidak dapat menyimpan ebook ke browser Anda.",
+            });
+          }
+          return updatedEbooks;
+        });
       };
       reader.readAsDataURL(file);
     }
+    // Reset file input
+    event.target.value = "";
   };
 
-  const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(prev + 0.2, 2));
-  };
-
-  const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(prev - 0.2, 0.4));
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleSuggestedTermClick = (term: string) => {
-    setSearchTerm(term);
+  const handleDelete = (idToDelete: string) => {
+    setEbooks((prevEbooks) => {
+      const updatedEbooks = prevEbooks.filter(ebook => ebook.id !== idToDelete);
+      localStorage.setItem('ebook-library', JSON.stringify(updatedEbooks));
+      toast({
+        title: "Ebook Dihapus",
+        description: "Ebook telah dihapus dari library Anda.",
+      });
+      return updatedEbooks;
+    });
   };
 
   return (
-    <div className="min-h-screen w-full bg-background relative">
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="absolute top-4 left-4 z-20">
-            <PanelLeft className="h-5 w-5" />
-            <span className="sr-only">Buka Panel Kontrol</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-[300px] sm:w-[400px] flex flex-col">
-          <SheetHeader>
-            <SheetTitle>Kontrol</SheetTitle>
-            <SheetDescription>Unggah & cari di dalam PDF Anda.</SheetDescription>
-          </SheetHeader>
-           <ControlPanel
-              searchTerm={searchTerm}
-              onSearchChange={handleSearchChange}
-              suggestedTerms={suggestedTerms}
-              isSearching={isSearching}
-              onSuggestedTermClick={handleSuggestedTermClick}
-              onFileChange={handleFileChange}
-              pdfFileName={pdfFileName}
-              isPdfUploaded={!!pdfDataUri}
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="p-4 border-b flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Library Ebook Saya</h1>
+        <Button asChild>
+          <label htmlFor="pdf-upload" className="cursor-pointer">
+            <Upload className="mr-2" />
+            Unggah Ebook Baru
+            <input
+              id="pdf-upload"
+              type="file"
+              className="hidden"
+              onChange={handleFileChange}
+              accept=".pdf"
             />
-        </SheetContent>
-      </Sheet>
-
-      <PdfViewer
-        pdfUri={pdfDataUri}
-        zoomLevel={zoomLevel}
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        totalPages={totalPages}
-        setTotalPages={setTotalPages}
-      />
+          </label>
+        </Button>
+      </header>
+      <main className="p-4 md:p-8">
+        {ebooks.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {ebooks.map((ebook) => (
+              <div key={ebook.id} className="group relative">
+                <Link href={`/viewer/${ebook.id}`} className="block">
+                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center p-4 transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-1">
+                    <BookOpen className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                  <p className="mt-2 text-sm font-medium truncate" title={ebook.name}>
+                    {ebook.name}
+                  </p>
+                </Link>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => handleDelete(ebook.id)}
+                >
+                  Hapus
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <h2 className="text-2xl font-semibold">Library Anda kosong</h2>
+            <p className="text-muted-foreground mt-2">Unggah ebook PDF pertama Anda untuk memulai.</p>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

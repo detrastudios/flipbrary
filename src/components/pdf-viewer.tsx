@@ -33,7 +33,7 @@ export default function PdfViewer({
 
   useEffect(() => {
     setIsZooming(true);
-    const timer = setTimeout(() => setIsZooming(false), 300); // Debounce text layer rendering
+    const timer = setTimeout(() => setIsZooming(false), 300);
     return () => clearTimeout(timer);
   }, [zoomLevel]);
 
@@ -85,7 +85,7 @@ export default function PdfViewer({
         ) : (
           <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground h-full">
             <FileQuestion className="h-16 w-16" />
-            <p className="text-lg text-center px-4">Silakan unggah file PDF untuk melihatnya.</p>
+            <p className="text-lg text-center px-4">Memuat Ebook...</p>
           </div>
         )}
       </div>

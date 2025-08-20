@@ -12,9 +12,6 @@ type ControlPanelProps = {
   suggestedTerms: string[];
   isSearching: boolean;
   onSuggestedTermClick: (term: string) => void;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  pdfFileName: string | null;
-  isPdfUploaded: boolean;
 };
 
 export default function ControlPanel({
@@ -23,39 +20,18 @@ export default function ControlPanel({
   suggestedTerms,
   isSearching,
   onSuggestedTermClick,
-  onFileChange,
-  pdfFileName,
-  isPdfUploaded,
 }: ControlPanelProps) {
   return (
     <div className="h-full flex flex-col pt-6 space-y-6">
-      <div className="grid w-full max-w-sm items-center gap-1.5">
-        <Label htmlFor="pdf-upload">Unggah PDF</Label>
-        <div className="relative">
-          <Input id="pdf-upload" type="file" className="w-full pr-12" onChange={onFileChange} accept=".pdf" />
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            {isPdfUploaded ? (
-               <CheckCircle className="h-5 w-5 text-green-500" />
-            ) : (
-               <Upload className="h-5 w-5 text-muted-foreground" />
-            )}
-          </div>
-        </div>
-        {pdfFileName && <p className="text-xs text-muted-foreground mt-1 truncate">File: {pdfFileName}</p>}
-      </div>
-      
-      <Separator />
-
       <div className="space-y-4">
         <Label>Cari Dokumen</Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Cari dokumen..."
+            placeholder="Cari di dalam dokumen..."
             className="pl-10"
             value={searchTerm}
             onChange={onSearchChange}
-            disabled={!isPdfUploaded}
           />
         </div>
         <div className="h-64">
