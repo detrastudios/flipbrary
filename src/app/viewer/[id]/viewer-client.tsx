@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -31,6 +32,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const { getEbookById } = useIndexedDB();
 
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestedTerms, setSuggestedTerms] = useState<string[]>([]);
@@ -103,6 +105,14 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     setZoomLevel((prev) => Math.max(prev - 0.2, 0.4));
   };
 
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
@@ -149,15 +159,17 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
         </Sheet>
       </header>
 
-      <main className="flex-1 relative">
+      <main className="flex-1 relative p-4 md:p-8 flex items-center justify-center">
         <PdfViewer
             pdfUri={pdfDataUri}
             zoomLevel={zoomLevel}
             onZoomIn={handleZoomIn}
             onZoomOut={handleZoomOut}
+            currentPage={currentPage}
+            onPrevPage={handlePrevPage}
+            onNextPage={handleNextPage}
             totalPages={totalPages}
             setTotalPages={setTotalPages}
-            setZoomLevel={setZoomLevel}
         />
       </main>
     </div>

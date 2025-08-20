@@ -1,23 +1,28 @@
 
 "use client";
 
-import { Document, Page } from 'react-pdf';
+import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-import { ZoomIn, ZoomOut, FileQuestion, LoaderCircle } from "lucide-react";
+import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, FileQuestion, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { useState, useEffect, useRef } from 'react';
+
+// Solusi: Tentukan jalur untuk worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 type PdfViewerProps = {
   pdfUri: string | null;
   zoomLevel: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
+  currentPage: number;
+  onPrevPage: () => void;
+  onNextPage: () => void;
   totalPages: number;
   setTotalPages: (pages: number) => void;
-  setZoomLevel: (zoom: number) => void;
 };
 
 export default function PdfViewer({
@@ -25,37 +30,13 @@ export default function PdfViewer({
   zoomLevel,
   onZoomIn,
   onZoomOut,
+  currentPage,
+  onPrevPage,
+  onNextPage,
   totalPages,
-  setTotalPages,
-  setZoomLevel,
+  setTotalPages
 }: PdfViewerProps) {
   const { toast } = useToast();
-  const [isZooming, setIsZooming] = useState(false);
-  const [initialWidth, setInitialWidth] = useState<number | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    // Set workerSrc only on the client-side
-    async function configurePdfjs() {
-      const { pdfjs } = await import('react-pdf');
-      pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-    }
-    configurePdfjs();
-  }, []);
-
-  useEffect(() => {
-    if (containerRef.current) {
-        setInitialWidth(containerRef.current.clientWidth - 40);
-    }
-  }, []);
-
-
-  useEffect(() => {
-    setIsZooming(true);
-    const timer = setTimeout(() => setIsZooming(false), 300);
-    return () => clearTimeout(timer);
-  }, [zoomLevel]);
-
 
   function onDocumentLoadSuccess({ numPages }: PDFDocumentProxy): void {
     setTotalPages(numPages);
@@ -73,9 +54,10 @@ export default function PdfViewer({
   }
 
   return (
-    <div className="h-screen w-full group">
-       <div ref={containerRef} className="h-full overflow-auto flex items-start justify-center bg-gray-200 dark:bg-gray-800">
-        {pdfUri ? (
+    <Card className="overflow-hidden w-full max-w-4xl">
+      <CardContent className="p-4 bg-muted/20">
+        <div className="overflow-auto h-[70vh] rounded-md flex items-start justify-center bg-gray-200 dark:bg-gray-800">
+          {pdfUri ? (
             <Document
               file={pdfUri}
               onLoadSuccess={onDocumentLoadSuccess}
@@ -90,52 +72,54 @@ export default function PdfViewer({
                 <div className="text-destructive">Gagal memuat file PDF.</div>
               }
             >
-              {Array.from(new Array(totalPages), (el, index) => (
-                <Page
-                  key={`page_${index + 1}`}
-                  pageNumber={index + 1}
-                  scale={zoomLevel}
-                  renderTextLayer={!isZooming}
-                  renderAnnotationLayer={false}
-                  className="mb-4 shadow-lg"
-                  width={initialWidth ? initialWidth : undefined}
-                  onRenderSuccess={() => {
-                      if (index === 0 && initialWidth) {
-                          setInitialWidth(null);
-                      }
-                  }}
-                />
-              ))}
+              <Page
+                key={`page_${currentPage}`}
+                pageNumber={currentPage}
+                scale={zoomLevel}
+                renderTextLayer={true}
+                renderAnnotationLayer={false}
+                className="mb-4 shadow-lg"
+              />
             </Document>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground h-full">
-            <FileQuestion className="h-16 w-16" />
-            <p className="text-lg text-center px-4">Memuat Ebook...</p>
-          </div>
-        )}
-      </div>
-
-      {pdfUri && (
-         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm border rounded-lg p-2 shadow-lg">
-                <Button variant="outline" size="icon" onClick={onZoomOut} disabled={!pdfUri || zoomLevel <= 0.4}>
-                    <ZoomOut className="h-4 w-4" />
-                    <span className="sr-only">Perkecil</span>
-                </Button>
-                <span className="text-sm text-muted-foreground w-16 text-center">
-                    {Math.round(zoomLevel * 100)}%
-                </span>
-                <Button variant="outline" size="icon" onClick={onZoomIn} disabled={!pdfUri || zoomLevel >= 2}>
-                    <ZoomIn className="h-4 w-4" />
-                    <span className="sr-only">Perbesar</span>
-                </Button>
-                <div className="h-6 w-px bg-border mx-2"></div>
-                <span className="text-sm font-medium w-24 text-center">
-                    Total Halaman: {totalPages}
-                </span>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground h-full">
+              <FileQuestion className="h-16 w-16" />
+              <p className="text-lg text-center px-4">Memuat Ebook...</p>
             </div>
+          )}
         </div>
+      </CardContent>
+      {pdfUri && (
+        <CardFooter className="flex items-center justify-center p-2 bg-background/80 backdrop-blur-sm border-t">
+          <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={onZoomOut} disabled={!pdfUri || zoomLevel <= 0.5}>
+                  <ZoomOut className="h-4 w-4" />
+                  <span className="sr-only">Perkecil</span>
+              </Button>
+              <span className="text-sm text-muted-foreground w-16 text-center">
+                  {Math.round(zoomLevel * 100)}%
+              </span>
+              <Button variant="outline" size="icon" onClick={onZoomIn} disabled={!pdfUri || zoomLevel >= 2}>
+                  <ZoomIn className="h-4 w-4" />
+                  <span className="sr-only">Perbesar</span>
+              </Button>
+          </div>
+          <div className="flex-1 h-px bg-border mx-4"></div>
+          <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={onPrevPage} disabled={!pdfUri || currentPage <= 1}>
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="sr-only">Halaman Sebelumnya</span>
+              </Button>
+              <span className="text-sm font-medium w-24 text-center">
+                  Halaman {currentPage} dari {totalPages}
+              </span>
+              <Button variant="outline" size="icon" onClick={onNextPage} disabled={!pdfUri || currentPage >= totalPages}>
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="sr-only">Halaman Berikutnya</span>
+              </Button>
+          </div>
+        </CardFooter>
       )}
-    </div>
+    </Card>
   );
 }
