@@ -7,6 +7,7 @@ import { ZoomIn, ZoomOut, FileQuestion, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { PDFDocumentProxy } from 'pdfjs-dist';
+import { useState, useEffect } from 'react';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -28,12 +29,23 @@ export default function PdfViewer({
   setTotalPages
 }: PdfViewerProps) {
   const { toast } = useToast();
+  const [isZooming, setIsZooming] = useState(false);
+
+  useEffect(() => {
+    setIsZooming(true);
+    const timer = setTimeout(() => setIsZooming(false), 300); // Debounce text layer rendering
+    return () => clearTimeout(timer);
+  }, [zoomLevel]);
+
 
   function onDocumentLoadSuccess({ numPages }: PDFDocumentProxy): void {
     setTotalPages(numPages);
   }
 
   function onDocumentLoadError(error: Error) {
+    if (error.name === 'AbortException') {
+        return;
+    }
     toast({
       variant: "destructive",
       title: "Gagal memuat PDF",
@@ -64,7 +76,7 @@ export default function PdfViewer({
                   key={`page_${index + 1}`}
                   pageNumber={index + 1}
                   scale={zoomLevel}
-                  renderTextLayer={true}
+                  renderTextLayer={!isZooming}
                   renderAnnotationLayer={false}
                   className="mb-4 shadow-lg"
                 />
