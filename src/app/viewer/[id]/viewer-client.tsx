@@ -1,26 +1,25 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useDebounce } from "@/hooks/use-debounce";
 import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
 import ControlPanel from "@/components/control-panel";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ArrowLeft, BookOpen, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
+import { Menu, ArrowLeft, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
 import Link from 'next/link';
 import type { CarouselApi } from "@/components/ui/carousel";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-800">
-        <BookOpen className="w-24 h-24 text-muted-foreground animate-pulse" />
-        <p className="mt-4 text-lg text-muted-foreground">Mempersiapkan buku...</p>
+        <Skeleton className="w-full h-full" />
     </div>
   ),
 });
@@ -183,7 +182,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
         </Sheet>
       </header>
 
-      <main className="flex-1 relative flex items-center justify-center overflow-hidden p-4 md:p-8">
+      <main className="flex-1 relative flex items-center justify-center overflow-hidden">
         <PdfViewer
             pdfUri={pdfDataUri}
             zoomLevel={zoomLevel}
