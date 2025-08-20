@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
-import { summarizePdf } from "@/ai/flows/summarize-pdf";
 import ControlPanel from "@/components/control-panel";
 import PdfViewer from "@/components/pdf-viewer";
 import { useToast } from "@/hooks/use-toast";
@@ -15,8 +14,6 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestedTerms, setSuggestedTerms] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [summary, setSummary] = useState("");
-  const [isSummarizing, setIsSummarizing] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [pdfFileName, setPdfFileName] = useState<string | null>(null);
 
@@ -47,32 +44,6 @@ export default function Home() {
     }
   }, [debouncedSearchTerm, toast]);
 
-  const handleSummarize = useCallback(async () => {
-    if (!pdfDataUri) {
-      toast({
-        variant: "destructive",
-        title: "No PDF Selected",
-        description: "Please upload a PDF file to summarize.",
-      });
-      return;
-    }
-    setIsSummarizing(true);
-    setSummary("");
-    try {
-      const result = await summarizePdf({ pdfDataUri });
-      setSummary(result.summary);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Summarization Error",
-        description: "Failed to summarize the document. Please try again.",
-      });
-      setSummary("Could not generate a summary.");
-    } finally {
-      setIsSummarizing(false);
-    }
-  }, [pdfDataUri, toast]);
-  
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -89,7 +60,7 @@ export default function Home() {
         const dataUri = e.target?.result as string;
         setPdfDataUri(dataUri);
         setPdfFileName(file.name);
-        setSummary(""); // Clear previous summary
+        setCurrentPage(1); // Reset to first page on new file
       };
       reader.readAsDataURL(file);
     }
@@ -136,9 +107,6 @@ export default function Home() {
               suggestedTerms={suggestedTerms}
               isSearching={isSearching}
               onSuggestedTermClick={handleSuggestedTermClick}
-              onSummarize={handleSummarize}
-              summary={summary}
-              isSummarizing={isSummarizing}
               onFileChange={handleFileChange}
               pdfFileName={pdfFileName}
               isPdfUploaded={!!pdfDataUri}
@@ -147,6 +115,7 @@ export default function Home() {
 
           <div className="md:col-span-8 lg:col-span-9">
             <PdfViewer
+              pdfUri={pdfDataUri}
               currentPage={currentPage}
               totalPages={totalPages}
               zoomLevel={zoomLevel}
