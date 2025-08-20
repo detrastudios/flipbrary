@@ -2,37 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, BookOpen } from "lucide-react";
+import { Upload, BookOpen, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-
-type Ebook = {
-  id: string;
-  name: string;
-  dataUri: string;
-};
+import { useIndexedDB, Ebook } from "@/hooks/use-indexed-db";
 
 export default function LibraryPage() {
   const { toast } = useToast();
-  const [ebooks, setEbooks] = useState<Ebook[]>([]);
+  const { ebooks, addEbook, deleteEbook, loading } = useIndexedDB();
 
-  useEffect(() => {
-    try {
-      const storedEbooks = localStorage.getItem("ebook-library");
-      if (storedEbooks) {
-        setEbooks(JSON.parse(storedEbooks));
-      }
-    } catch (error) {
-      console.error("Gagal memuat ebook dari localStorage", error);
-      toast({
-        variant: "destructive",
-        title: "Gagal Memuat Library",
-        description: "Tidak dapat memuat data ebook dari browser Anda.",
-      });
-    }
-  }, [toast]);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type !== "application/pdf") {
@@ -44,60 +23,62 @@ export default function LibraryPage() {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUri = e.target?.result as string;
-        const newEbook: Ebook = {
-          id: `${Date.now()}-${file.name.replace(/\s/g, "-")}`,
+      try {
+        const newEbook: Omit<Ebook, 'id'> = {
           name: file.name,
-          dataUri,
+          data: file,
         };
-        
-        setEbooks((prevEbooks) => {
-          const updatedEbooks = [...prevEbooks, newEbook];
-          try {
-            localStorage.setItem("ebook-library", JSON.stringify(updatedEbooks));
-            toast({
-              title: "Unggah Berhasil",
-              description: `"${file.name}" telah ditambahkan ke library Anda.`,
-            });
-          } catch (error) {
-            console.error("Gagal menyimpan ebook ke localStorage", error);
-            toast({
-              variant: "destructive",
-              title: "Gagal Menyimpan Ebook",
-              description: "Tidak dapat menyimpan ebook ke browser Anda.",
-            });
-          }
-          return updatedEbooks;
+        await addEbook(newEbook);
+        toast({
+          title: "Unggah Berhasil",
+          description: `"${file.name}" telah ditambahkan ke library Anda.`,
         });
-      };
-      reader.readAsDataURL(file);
+      } catch (error) {
+        console.error("Gagal menyimpan ebook ke IndexedDB", error);
+        toast({
+          variant: "destructive",
+          title: "Gagal Menyimpan Ebook",
+          description: "Tidak dapat menyimpan ebook ke browser Anda karena kesalahan.",
+        });
+      }
     }
     // Reset file input
     event.target.value = "";
   };
 
-  const handleDelete = (idToDelete: string) => {
-    setEbooks((prevEbooks) => {
-      const updatedEbooks = prevEbooks.filter(ebook => ebook.id !== idToDelete);
-      localStorage.setItem('ebook-library', JSON.stringify(updatedEbooks));
+  const handleDelete = async (idToDelete: number) => {
+    try {
+      await deleteEbook(idToDelete);
       toast({
         title: "Ebook Dihapus",
         description: "Ebook telah dihapus dari library Anda.",
       });
-      return updatedEbooks;
-    });
+    } catch (error) {
+      console.error("Gagal menghapus ebook dari IndexedDB", error);
+      toast({
+        variant: "destructive",
+        title: "Gagal Menghapus Ebook",
+        description: "Tidak dapat menghapus ebook dari library Anda.",
+      });
+    }
   };
+
+  if (loading) {
+    return (
+        <div className="flex items-center justify-center min-h-screen">
+            <p>Memuat library Anda...</p>
+        </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="p-4 border-b flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Library Ebook Saya</h1>
+      <header className="p-4 border-b flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-sm z-10">
+        <h1 className="text-2xl font-bold">PDFreeze Library</h1>
         <Button asChild>
           <label htmlFor="pdf-upload" className="cursor-pointer">
             <Upload className="mr-2" />
-            Unggah Ebook Baru
+            Unggah PDF Baru
             <input
               id="pdf-upload"
               type="file"
@@ -110,32 +91,46 @@ export default function LibraryPage() {
       </header>
       <main className="p-4 md:p-8">
         {ebooks.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             {ebooks.map((ebook) => (
-              <div key={ebook.id} className="group relative">
-                <Link href={`/viewer/${ebook.id}`} className="block">
-                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center p-4 transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-1">
+              <div key={ebook.id} className="group relative transition-all duration-300 hover:scale-105">
+                <Link href={`/viewer/${ebook.id}`} className="block text-center">
+                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center p-4 shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:border-primary border-2 border-transparent">
                     <BookOpen className="w-12 h-12 text-muted-foreground" />
                   </div>
-                  <p className="mt-2 text-sm font-medium truncate" title={ebook.name}>
+                  <p className="mt-2 text-sm font-medium truncate px-1" title={ebook.name}>
                     {ebook.name}
                   </p>
                 </Link>
                 <Button
                   variant="destructive"
-                  size="sm"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  size="icon"
+                  className="absolute -top-3 -right-3 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => handleDelete(ebook.id)}
+                  aria-label="Hapus Ebook"
                 >
-                  Hapus
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-20">
+          <div className="text-center py-20 border-2 border-dashed rounded-lg">
             <h2 className="text-2xl font-semibold">Library Anda kosong</h2>
             <p className="text-muted-foreground mt-2">Unggah ebook PDF pertama Anda untuk memulai.</p>
+             <Button asChild className="mt-4">
+              <label htmlFor="pdf-upload-empty" className="cursor-pointer">
+                <Upload className="mr-2" />
+                Unggah PDF
+                <input
+                  id="pdf-upload-empty"
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept=".pdf"
+                />
+              </label>
+            </Button>
           </div>
         )}
       </main>
