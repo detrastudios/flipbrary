@@ -68,18 +68,18 @@ export default function Home() {
         const dataUri = e.target?.result as string;
         setPdfDataUri(dataUri);
         setPdfFileName(file.name);
-        setTotalPages(0);
+        setTotalPages(0); // Reset pages when new file is uploaded
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(prev + 0.1, 2));
+    setZoomLevel((prev) => Math.min(prev + 0.2, 2));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(prev - 0.1, 0.5));
+    setZoomLevel((prev) => Math.max(prev - 0.2, 0.4));
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,7 +99,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
-        <div className="container mx-auto grid grid-cols-1 items-start gap-8 p-4 pt-8 md:grid-cols-12">
+        <div className="container mx-auto grid grid-cols-1 items-start gap-4 p-4 md:grid-cols-12 md:gap-8 md:pt-8">
           <div className="md:col-span-4 lg:col-span-3">
             <ControlPanel
               searchTerm={searchTerm}

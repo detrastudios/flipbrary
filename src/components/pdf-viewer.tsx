@@ -44,7 +44,7 @@ export default function PdfViewer({
 
   return (
     <Card className="overflow-hidden">
-      <CardContent className="p-4 bg-muted/20">
+      <CardContent className="p-0 sm:p-4 bg-muted/20">
         <div className="overflow-auto h-[70vh] rounded-md flex items-start justify-center bg-gray-200 dark:bg-gray-800">
           {pdfUri ? (
              <Document
@@ -52,7 +52,7 @@ export default function PdfViewer({
                 onLoadSuccess={onDocumentLoadSuccess}
                 onLoadError={onDocumentLoadError}
                 loading={
-                  <div className="flex items-center text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                     <LoaderCircle className="mr-2 h-6 w-6 animate-spin" />
                     <span>Memuat PDF...</span>
                   </div>
@@ -73,16 +73,16 @@ export default function PdfViewer({
                 ))}
              </Document>
           ) : (
-            <div className="flex flex-col items-center gap-4 text-muted-foreground self-center">
+            <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground h-full">
               <FileQuestion className="h-16 w-16" />
-              <p className="text-lg">Silakan unggah file PDF untuk melihatnya.</p>
+              <p className="text-lg text-center px-4">Silakan unggah file PDF untuk melihatnya.</p>
             </div>
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex items-center justify-center p-2 bg-background/80 backdrop-blur-sm border-t">
+      <CardFooter className="flex flex-col sm:flex-row items-center justify-center p-2 bg-background/80 backdrop-blur-sm border-t gap-4">
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={onZoomOut} disabled={!pdfUri || zoomLevel <= 0.5}>
+            <Button variant="outline" size="icon" onClick={onZoomOut} disabled={!pdfUri || zoomLevel <= 0.4}>
                 <ZoomOut className="h-4 w-4" />
                 <span className="sr-only">Perkecil</span>
             </Button>
@@ -94,7 +94,7 @@ export default function PdfViewer({
                 <span className="sr-only">Perbesar</span>
             </Button>
         </div>
-        <div className="flex-1 h-px bg-border mx-4"></div>
+        <div className="hidden sm:flex flex-1 h-px bg-border mx-4"></div>
         <div className="flex items-center gap-2">
             <span className="text-sm font-medium w-24 text-center">
                 Total Halaman: {pdfUri ? totalPages : "-"}
