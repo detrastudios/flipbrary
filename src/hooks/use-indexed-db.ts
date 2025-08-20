@@ -54,11 +54,10 @@ const createPdfThumbnail = async (file: File | Blob): Promise<string> => {
     reader.onload = async (event) => {
       try {
         const data = event.target?.result;
-        if (typeof data !== 'string') {
-          return reject(new Error('Gagal membaca file PDF.'));
+        if (!(data instanceof ArrayBuffer)) {
+          return reject(new Error('Gagal membaca file PDF sebagai ArrayBuffer.'));
         }
         
-        // `data` sudah dalam format data URL (e.g., "data:application/pdf;base64,...")
         const pdf = await pdfjs.getDocument({ data }).promise;
         const page = await pdf.getPage(1);
         
@@ -79,7 +78,7 @@ const createPdfThumbnail = async (file: File | Blob): Promise<string> => {
       }
     };
     reader.onerror = reject;
-    reader.readAsDataURL(file);
+    reader.readAsArrayBuffer(file);
   });
 };
 
