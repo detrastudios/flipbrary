@@ -7,11 +7,14 @@ import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
 import ControlPanel from "@/components/control-panel";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { PanelLeft } from "lucide-react";
 
 const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[70vh] flex items-center justify-center">
+    <div className="w-full h-screen flex items-center justify-center">
       <Skeleton className="w-full h-full" />
     </div>
   ),
@@ -91,17 +94,16 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-          <h1 className="text-2xl font-bold text-primary">PDFreeze</h1>
-        </div>
-      </header>
-
-      <main className="flex-1">
-        <div className="container mx-auto grid grid-cols-1 items-start gap-4 p-4 md:grid-cols-12 md:gap-8 md:pt-8">
-          <div className="md:col-span-4 lg:col-span-3">
-            <ControlPanel
+    <div className="min-h-screen w-full bg-background relative">
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="icon" className="absolute top-4 left-4 z-20">
+            <PanelLeft className="h-5 w-5" />
+            <span className="sr-only">Buka Panel Kontrol</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+           <ControlPanel
               searchTerm={searchTerm}
               onSearchChange={handleSearchChange}
               suggestedTerms={suggestedTerms}
@@ -111,20 +113,17 @@ export default function Home() {
               pdfFileName={pdfFileName}
               isPdfUploaded={!!pdfDataUri}
             />
-          </div>
+        </SheetContent>
+      </Sheet>
 
-          <div className="md:col-span-8 lg:col-span-9">
-            <PdfViewer
-              pdfUri={pdfDataUri}
-              zoomLevel={zoomLevel}
-              onZoomIn={handleZoomIn}
-              onZoomOut={handleZoomOut}
-              totalPages={totalPages}
-              setTotalPages={setTotalPages}
-            />
-          </div>
-        </div>
-      </main>
+      <PdfViewer
+        pdfUri={pdfDataUri}
+        zoomLevel={zoomLevel}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        totalPages={totalPages}
+        setTotalPages={setTotalPages}
+      />
     </div>
   );
 }
