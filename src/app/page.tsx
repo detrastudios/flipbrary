@@ -1,11 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useDebounce } from "@/hooks/use-debounce";
 import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
 import ControlPanel from "@/components/control-panel";
-import PdfViewer from "@/components/pdf-viewer";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[70vh] flex items-center justify-center">
+      <Skeleton className="w-full h-full" />
+    </div>
+  ),
+});
 
 export default function Home() {
   const { toast } = useToast();
