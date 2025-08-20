@@ -1,49 +1,82 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, BookOpen, Trash2 } from "lucide-react";
+import { Upload, BookOpen, Trash2, FileText, X } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useIndexedDB, Ebook } from "@/hooks/use-indexed-db";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function LibraryPage() {
   const { toast } = useToast();
   const { ebooks, addEbook, deleteEbook, loading } = useIndexedDB();
+  
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [newEbookName, setNewEbookName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type !== "application/pdf") {
+        setFileError("Silakan unggah file PDF yang valid.");
+        setSelectedFile(null);
+      } else {
+        setFileError(null);
+        setSelectedFile(file);
+        // Secara opsional, isi nama ebook dari nama file jika kosong
+        if (!newEbookName) {
+            setNewEbookName(file.name.replace('.pdf', ''));
+        }
+      }
+    }
+  };
+
+  const handleUploadSubmit = async () => {
+    if (!selectedFile) {
+        setFileError("Silakan pilih file PDF untuk diunggah.");
+        return;
+    }
+    if (!newEbookName.trim()) {
         toast({
-          variant: "destructive",
-          title: "Jenis File Tidak Valid",
-          description: "Silakan unggah file PDF yang valid.",
+            variant: "destructive",
+            title: "Nama Ebook Diperlukan",
+            description: "Silakan masukkan nama untuk ebook Anda.",
         });
         return;
-      }
+    }
 
-      try {
+    try {
         const newEbook: Omit<Ebook, 'id'> = {
-          name: file.name,
-          data: file,
+            name: newEbookName.trim(),
+            data: selectedFile,
         };
         await addEbook(newEbook);
         toast({
-          title: "Unggah Berhasil",
-          description: `"${file.name}" telah ditambahkan ke library Anda.`,
+            title: "Unggah Berhasil",
+            description: `"${newEbook.name}" telah ditambahkan ke library Anda.`,
         });
-      } catch (error) {
+        resetUploadForm();
+    } catch (error) {
         console.error("Gagal menyimpan ebook ke IndexedDB", error);
         toast({
-          variant: "destructive",
-          title: "Gagal Menyimpan Ebook",
-          description: "Tidak dapat menyimpan ebook ke browser Anda karena kesalahan.",
+            variant: "destructive",
+            title: "Gagal Menyimpan Ebook",
+            description: "Tidak dapat menyimpan ebook ke browser Anda karena kesalahan.",
         });
-      }
     }
-    // Reset file input
-    event.target.value = "";
+  };
+  
+  const resetUploadForm = () => {
+    setIsUploadDialogOpen(false);
+    setNewEbookName("");
+    setSelectedFile(null);
+    setFileError(null);
   };
 
   const handleDelete = async (idToDelete: number) => {
@@ -73,22 +106,56 @@ export default function LibraryPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="p-4 border-b flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-sm z-10">
+       <header className="p-4 border-b flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-sm z-10">
         <h1 className="text-2xl font-bold">PDFreeze Library</h1>
-        <Button asChild>
-          <label htmlFor="pdf-upload" className="cursor-pointer">
-            <Upload className="mr-2" />
-            Unggah PDF Baru
-            <input
-              id="pdf-upload"
-              type="file"
-              className="hidden"
-              onChange={handleFileChange}
-              accept=".pdf"
-            />
-          </label>
+        <Button onClick={() => setIsUploadDialogOpen(true)}>
+          <Upload className="mr-2" />
+          Unggah PDF Baru
         </Button>
       </header>
+
+      <Dialog open={isUploadDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) resetUploadForm(); else setIsUploadDialogOpen(true); }}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Unggah Ebook Baru</DialogTitle>
+            <DialogDescription>
+              Pilih file PDF dan berikan nama untuk menambahkannya ke library Anda.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="ebook-name" className="text-right">
+                Nama Ebook
+              </Label>
+              <Input
+                id="ebook-name"
+                value={newEbookName}
+                onChange={(e) => setNewEbookName(e.target.value)}
+                className="col-span-3"
+                placeholder="Contoh: Novel Sejarah"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="pdf-upload" className="text-right">
+                File PDF
+              </Label>
+               <Input id="pdf-upload" type="file" onChange={handleFileChange} accept=".pdf" className="col-span-3"/>
+            </div>
+             {fileError && <p className="col-span-4 text-sm text-red-500 text-center -mt-2">{fileError}</p>}
+             {selectedFile && !fileError && (
+                <div className="col-start-2 col-span-3 flex items-center space-x-2 text-sm text-muted-foreground p-2 bg-muted rounded-md">
+                   <FileText className="h-4 w-4 flex-shrink-0" />
+                   <span className="truncate flex-grow" title={selectedFile.name}>{selectedFile.name}</span>
+                </div>
+             )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={resetUploadForm}>Batal</Button>
+            <Button onClick={handleUploadSubmit} disabled={!selectedFile || !newEbookName}>Simpan & Unggah</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       <main className="p-4 md:p-8">
         {ebooks.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
@@ -118,18 +185,9 @@ export default function LibraryPage() {
           <div className="text-center py-20 border-2 border-dashed rounded-lg">
             <h2 className="text-2xl font-semibold">Library Anda kosong</h2>
             <p className="text-muted-foreground mt-2">Unggah ebook PDF pertama Anda untuk memulai.</p>
-             <Button asChild className="mt-4">
-              <label htmlFor="pdf-upload-empty" className="cursor-pointer">
+             <Button className="mt-4" onClick={() => setIsUploadDialogOpen(true)}>
                 <Upload className="mr-2" />
                 Unggah PDF
-                <input
-                  id="pdf-upload-empty"
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileChange}
-                  accept=".pdf"
-                />
-              </label>
             </Button>
           </div>
         )}
@@ -137,3 +195,5 @@ export default function LibraryPage() {
     </div>
   );
 }
+
+    
