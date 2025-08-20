@@ -10,12 +10,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ArrowLeft, BookOpen, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Menu, ArrowLeft, BookOpen, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
 import Link from 'next/link';
-import type { IFlipSetting } from "react-pageflip";
+import type { CarouselApi } from "@/components/ui/carousel";
 
-const PdfFlipbook = dynamic(() => import("@/components/pdf-flipbook"), {
+const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-800">
@@ -32,9 +32,8 @@ type ViewerPageProps = {
 export default function ViewerPageClient({ id }: ViewerPageProps) {
   const { toast } = useToast();
   const { getEbookById } = useIndexedDB();
-  const flipBookRef = useRef<any>(null);
 
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestedTerms, setSuggestedTerms] = useState<string[]>([]);
@@ -42,7 +41,8 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [ebookId, setEbookId] = useState<number | null>(null);
-  
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -54,7 +54,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
         }
     }
   }, [id]);
-
 
   useEffect(() => {
     if (ebookId !== null) {
@@ -99,9 +98,21 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     }
   }, [debouncedSearchTerm, toast]);
 
-  const onPage = (e: any) => {
-    setCurrentPage(e.data);
-  };
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const onSelect = () => {
+      setCurrentPage(carouselApi.selectedScrollSnap() + 1);
+    };
+
+    carouselApi.on("select", onSelect);
+    // Set initial page
+    onSelect(); 
+
+    return () => {
+      carouselApi.off("select", onSelect);
+    };
+  }, [carouselApi]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -111,12 +122,20 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     setSearchTerm(term);
   };
 
-  const handleNextPage = () => {
-    flipBookRef.current?.pageFlip()?.flipNext();
+  const handleNextPage = useCallback(() => {
+    carouselApi?.scrollNext();
+  }, [carouselApi]);
+
+  const handlePrevPage = useCallback(() => {
+    carouselApi?.scrollPrev();
+  }, [carouselApi]);
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.2, 3));
   };
 
-  const handlePrevPage = () => {
-    flipBookRef.current?.pageFlip()?.flipPrev();
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.2, 0.4));
   };
 
 
@@ -156,30 +175,33 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
               isSearching={isSearching}
               onSuggestedTermClick={handleSuggestedTermClick}
               pdfLoaded={!!pdfDataUri}
+              zoomLevel={zoomLevel}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
             />
           </SheetContent>
         </Sheet>
       </header>
 
       <main className="flex-1 relative flex items-center justify-center overflow-hidden p-4 md:p-8">
-        <PdfFlipbook
-            ref={flipBookRef}
+        <PdfViewer
             pdfUri={pdfDataUri}
+            zoomLevel={zoomLevel}
             setTotalPages={setTotalPages}
-            onPage={onPage}
+            setApi={setCarouselApi}
         />
       </main>
 
       <footer className="flex items-center justify-center p-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
           <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" onClick={handlePrevPage} disabled={currentPage === 0}>
+              <Button variant="outline" size="icon" onClick={handlePrevPage} disabled={!carouselApi?.canScrollPrev()}>
                   <ChevronsLeft />
                   <span className="sr-only">Halaman Sebelumnya</span>
               </Button>
               <p className="text-sm text-muted-foreground">
-                  Halaman {currentPage + 1} dari {totalPages}
+                  Halaman {currentPage} dari {totalPages}
               </p>
-              <Button variant="outline" size="icon" onClick={handleNextPage} disabled={currentPage >= totalPages - 1}>
+              <Button variant="outline" size="icon" onClick={handleNextPage} disabled={!carouselApi?.canScrollNext()}>
                   <ChevronsRight />
                   <span className="sr-only">Halaman Berikutnya</span>
               </Button>

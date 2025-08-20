@@ -1,11 +1,12 @@
 
 "use client";
 
-import { Search, LoaderCircle } from "lucide-react";
+import { Search, LoaderCircle, ZoomIn, ZoomOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "./ui/button";
 
 type ControlPanelProps = {
   searchTerm: string;
@@ -14,6 +15,9 @@ type ControlPanelProps = {
   isSearching: boolean;
   onSuggestedTermClick: (term: string) => void;
   pdfLoaded: boolean;
+  zoomLevel: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
 };
 
 export default function ControlPanel({
@@ -23,10 +27,28 @@ export default function ControlPanel({
   isSearching,
   onSuggestedTermClick,
   pdfLoaded,
+  zoomLevel,
+  onZoomIn,
+  onZoomOut,
 }: ControlPanelProps) {
   return (
     <div className="h-full flex flex-col pt-6 space-y-6">
       
+      <div className="space-y-4 px-4">
+         <Label>Kontrol Tampilan</Label>
+         <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={onZoomOut} disabled={!pdfLoaded || zoomLevel <= 0.4}>
+                <ZoomOut/>
+            </Button>
+            <div className="text-center text-sm font-medium w-12">{Math.round(zoomLevel * 100)}%</div>
+            <Button variant="outline" size="icon" onClick={onZoomIn} disabled={!pdfLoaded || zoomLevel >= 3}>
+                <ZoomIn />
+            </Button>
+         </div>
+      </div>
+
+      <Separator />
+
       <div className="space-y-4 flex-1 flex flex-col px-4">
         <Label>Cari Dokumen</Label>
         <div className="relative">
