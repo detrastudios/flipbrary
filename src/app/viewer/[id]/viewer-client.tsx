@@ -157,6 +157,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
             onZoomOut={handleZoomOut}
             totalPages={totalPages}
             setTotalPages={setTotalPages}
+            setZoomLevel={setZoomLevel}
         />
       </main>
     </div>

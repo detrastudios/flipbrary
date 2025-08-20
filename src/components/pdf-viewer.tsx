@@ -7,7 +7,7 @@ import { ZoomIn, ZoomOut, FileQuestion, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -18,6 +18,7 @@ type PdfViewerProps = {
   onZoomOut: () => void;
   totalPages: number;
   setTotalPages: (pages: number) => void;
+  setZoomLevel: (zoom: number) => void;
 };
 
 export default function PdfViewer({
@@ -26,10 +27,21 @@ export default function PdfViewer({
   onZoomIn,
   onZoomOut,
   totalPages,
-  setTotalPages
+  setTotalPages,
+  setZoomLevel,
 }: PdfViewerProps) {
   const { toast } = useToast();
   const [isZooming, setIsZooming] = useState(false);
+  const [initialWidth, setInitialWidth] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+        // Atur lebar awal untuk zoom responsif, dikurangi sedikit padding
+        setInitialWidth(containerRef.current.clientWidth - 40);
+    }
+  }, []);
+
 
   useEffect(() => {
     setIsZooming(true);
@@ -56,7 +68,7 @@ export default function PdfViewer({
 
   return (
     <div className="h-screen w-full group">
-       <div className="h-full overflow-auto flex items-start justify-center bg-gray-200 dark:bg-gray-800">
+       <div ref={containerRef} className="h-full overflow-auto flex items-start justify-center bg-gray-200 dark:bg-gray-800">
         {pdfUri ? (
             <Document
               file={pdfUri}
@@ -80,6 +92,14 @@ export default function PdfViewer({
                   renderTextLayer={!isZooming} // Nonaktifkan renderTextLayer saat zoom
                   renderAnnotationLayer={false}
                   className="mb-4 shadow-lg"
+                  width={initialWidth ? initialWidth : undefined}
+                  onRenderSuccess={() => {
+                      if (index === 0 && initialWidth) {
+                          // Setelah halaman pertama dirender dengan lebar awal,
+                          // nonaktifkan `width` dan biarkan `scale` yang mengontrol
+                          setInitialWidth(null);
+                      }
+                  }}
                 />
               ))}
             </Document>
