@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -129,11 +128,11 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   }, [carouselApi]);
 
   const handleZoomIn = useCallback(() => {
-    setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 2.0));
+    setZoomLevel(prevZoom => Math.min(prevZoom + 0.2, 2.0));
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setZoomLevel(prevZoom => Math.max(prevZoom - 0.1, 0.5));
+    setZoomLevel(prevZoom => Math.max(prevZoom - 0.2, 0.4));
   }, []);
 
   return (
@@ -150,9 +149,8 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
               <h1 className="text-lg font-semibold truncate">PDF Viewer</h1>
             </div>
         </div>
-        {/* Tambahkan tombol zoom di sini */}
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={handleZoomOut} disabled={zoomLevel <= 0.5}>
+          <Button variant="outline" size="icon" onClick={handleZoomOut} disabled={zoomLevel <= 0.4}>
             <ZoomOut className="h-4 w-4" />
           </Button>
           <span className="text-sm font-medium w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
@@ -192,7 +190,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
             pdfUri={pdfDataUri}
             setTotalPages={setTotalPages}
             setApi={setCarouselApi}
-            zoomLevel={zoomLevel} // Perbaikan: Teruskan prop zoomLevel
+            zoomLevel={zoomLevel}
         />
       </main>
 

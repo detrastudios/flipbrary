@@ -1,14 +1,13 @@
-
 "use client";
 
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { FileQuestion } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from './ui/skeleton';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -17,17 +16,19 @@ type PdfViewerProps = {
   pdfUri: string | null;
   setTotalPages: (pages: number) => void;
   setApi?: (api: CarouselApi) => void;
-  zoomLevel: number; // Tambahkan prop ini
+  zoomLevel: number;
 };
 
 export default function PdfViewer({
   pdfUri,
   setTotalPages: setTotalPagesProp,
   setApi,
-  zoomLevel, // Gunakan prop ini
+  zoomLevel,
 }: PdfViewerProps) {
   const { toast } = useToast();
   const [numPages, setNumPages] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: PDFDocumentProxy): void => {
     setNumPages(nextNumPages);
@@ -45,8 +46,25 @@ export default function PdfViewer({
     });
   }
 
+  useEffect(() => {
+    function handleResize() {
+      if (containerRef.current) {
+        // Adjust for padding (p-4 is 1rem on each side)
+        const padding = 32; 
+        setContainerWidth(containerRef.current.getBoundingClientRect().width - padding);
+      }
+    }
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
-    <div className="h-full w-full">
+    <div ref={containerRef} className="h-full w-full flex items-center justify-center">
       {pdfUri ? (
         <Document
             file={pdfUri}
@@ -66,14 +84,16 @@ export default function PdfViewer({
             <Carousel setApi={setApi} className="w-full h-full">
                 <CarouselContent className="h-full">
                     {Array.from(new Array(numPages), (el, index) => (
-                        <CarouselItem key={`page_${index + 1}`} className="h-full flex justify-center items-center">
-                            <Page
-                                pageNumber={index + 1}
-                                renderTextLayer={true}
-                                renderAnnotationLayer={false}
-                                className="shadow-lg mx-auto"
-                                scale={zoomLevel} // Perbaikan: Tambahkan properti scale
-                            />
+                        <CarouselItem key={`page_${index + 1}`} className="h-full flex justify-center items-start overflow-auto">
+                            <div className="p-4"> 
+                                <Page
+                                    pageNumber={index + 1}
+                                    renderTextLayer={true}
+                                    renderAnnotationLayer={false}
+                                    className="shadow-lg mx-auto"
+                                    width={containerWidth ? containerWidth * zoomLevel : undefined}
+                                />
+                            </div>
                         </CarouselItem>
                     ))}
                 </CarouselContent>
