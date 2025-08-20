@@ -11,10 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 // Set worker path for pdfjs
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 
 type PdfViewerProps = {
