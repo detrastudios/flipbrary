@@ -32,7 +32,7 @@ export default function LibraryPage() {
         setFileError(null);
         setSelectedFile(file);
         if (!newEbookName) {
-            setNewEbookName(file.name.replace('.pdf', ''));
+            setNewEbookName(file.name.replace(/\.pdf$/i, ''));
         }
       }
     }
@@ -146,13 +146,7 @@ export default function LibraryPage() {
               </Label>
                <Input id="pdf-upload" type="file" onChange={handleFileChange} accept=".pdf" disabled={isUploading}/>
             </div>
-             {fileError && <p className="text-sm text-red-500 -mt-2">{fileError}</p>}
-             {selectedFile && !fileError && (
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground p-2 bg-muted rounded-md">
-                   <FileText className="h-4 w-4 flex-shrink-0" />
-                   <span className="truncate flex-grow" title={selectedFile.name}>{selectedFile.name}</span>
-                </div>
-             )}
+             {fileError && <p className="text-sm text-red-500">{fileError}</p>}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={resetUploadForm} disabled={isUploading}>Batal</Button>
