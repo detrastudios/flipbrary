@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -68,8 +67,8 @@ export default function PdfViewer({
               }
             >
               {Array.from(new Array(totalPages), (el, index) => (
-                <CarouselItem key={`page_${index + 1}`} className="h-full flex justify-center items-center">
-                   <div className="p-4 overflow-auto">
+                <CarouselItem key={`page_${index + 1}`} className="h-full flex justify-center items-center overflow-auto">
+                   <div className="p-4">
                     <Page
                         pageNumber={index + 1}
                         renderTextLayer={true}
@@ -92,4 +91,3 @@ export default function PdfViewer({
     </div>
   );
 }
-
