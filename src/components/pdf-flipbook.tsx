@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useCallback, forwardRef } from 'react';
@@ -32,7 +31,7 @@ PageCover.displayName = "PageCover";
 const PageComponent = forwardRef<HTMLDivElement, { children: React.ReactNode; number: number }>((props, ref) => {
   return (
     <div ref={ref} className="bg-background border shadow-sm">
-      <div className="p-2 flex justify-end text-xs text-muted-foreground">{props.number + 1}</div>
+      <div className="p-2 flex justify-end text-xs text-muted-foreground">{props.number}</div>
       {props.children}
     </div>
   );
