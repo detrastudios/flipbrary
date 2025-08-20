@@ -3,13 +3,14 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, BookOpen, Trash2, FileText, X } from "lucide-react";
+import { Upload, BookOpen, Trash2, FileText, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useIndexedDB, Ebook } from "@/hooks/use-indexed-db";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Image from "next/image";
 
 export default function LibraryPage() {
   const { toast } = useToast();
@@ -19,6 +20,7 @@ export default function LibraryPage() {
   const [newEbookName, setNewEbookName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -29,7 +31,6 @@ export default function LibraryPage() {
       } else {
         setFileError(null);
         setSelectedFile(file);
-        // Secara opsional, isi nama ebook dari nama file jika kosong
         if (!newEbookName) {
             setNewEbookName(file.name.replace('.pdf', ''));
         }
@@ -51,8 +52,10 @@ export default function LibraryPage() {
         return;
     }
 
+    setIsUploading(true);
+
     try {
-        const newEbook: Omit<Ebook, 'id'> = {
+        const newEbook: Omit<Ebook, 'id' | 'thumbnailUrl'> = {
             name: newEbookName.trim(),
             data: selectedFile,
         };
@@ -63,12 +66,14 @@ export default function LibraryPage() {
         });
         resetUploadForm();
     } catch (error) {
-        console.error("Gagal menyimpan ebook ke IndexedDB", error);
+        console.error("Gagal menyimpan ebook atau membuat thumbnail", error);
         toast({
             variant: "destructive",
             title: "Gagal Menyimpan Ebook",
-            description: "Tidak dapat menyimpan ebook ke browser Anda karena kesalahan.",
+            description: "Terjadi kesalahan saat memproses atau menyimpan ebook Anda.",
         });
+    } finally {
+        setIsUploading(false);
     }
   };
   
@@ -132,13 +137,14 @@ export default function LibraryPage() {
                 value={newEbookName}
                 onChange={(e) => setNewEbookName(e.target.value)}
                 placeholder="Contoh: Novel Sejarah"
+                disabled={isUploading}
               />
             </div>
             <div className="grid w-full max-w-sm items-center gap-1.5">
               <Label htmlFor="pdf-upload">
                 File PDF
               </Label>
-               <Input id="pdf-upload" type="file" onChange={handleFileChange} accept=".pdf"/>
+               <Input id="pdf-upload" type="file" onChange={handleFileChange} accept=".pdf" disabled={isUploading}/>
             </div>
              {fileError && <p className="text-sm text-red-500 -mt-2">{fileError}</p>}
              {selectedFile && !fileError && (
@@ -149,8 +155,11 @@ export default function LibraryPage() {
              )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={resetUploadForm}>Batal</Button>
-            <Button onClick={handleUploadSubmit} disabled={!selectedFile || !newEbookName}>Simpan & Unggah</Button>
+            <Button variant="outline" onClick={resetUploadForm} disabled={isUploading}>Batal</Button>
+            <Button onClick={handleUploadSubmit} disabled={!selectedFile || !newEbookName || isUploading}>
+                {isUploading && <LoaderCircle className="mr-2 animate-spin" />}
+                {isUploading ? "Mengunggah..." : "Simpan & Unggah"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -161,8 +170,18 @@ export default function LibraryPage() {
             {ebooks.map((ebook) => (
               <div key={ebook.id} className="group relative transition-all duration-300 hover:scale-105">
                 <Link href={`/viewer/${ebook.id}`} className="block text-center">
-                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center p-4 shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:border-primary border-2 border-transparent">
-                    <BookOpen className="w-12 h-12 text-muted-foreground" />
+                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center p-1 shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:border-primary border-2 border-transparent overflow-hidden">
+                    {ebook.thumbnailUrl ? (
+                      <Image 
+                        src={ebook.thumbnailUrl} 
+                        alt={`Cover of ${ebook.name}`} 
+                        width={200}
+                        height={300}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <BookOpen className="w-12 h-12 text-muted-foreground" />
+                    )}
                   </div>
                   <p className="mt-2 text-sm font-medium truncate px-1" title={ebook.name}>
                     {ebook.name}

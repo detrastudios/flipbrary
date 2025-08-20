@@ -1,6 +1,7 @@
+
 "use client";
 
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { ZoomIn, ZoomOut, FileQuestion, LoaderCircle } from "lucide-react";
@@ -8,8 +9,6 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { useState, useEffect, useRef } from 'react';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 type PdfViewerProps = {
   pdfUri: string | null;
@@ -34,10 +33,18 @@ export default function PdfViewer({
   const [isZooming, setIsZooming] = useState(false);
   const [initialWidth, setInitialWidth] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    // Set workerSrc only on the client-side
+    async function configurePdfjs() {
+      const { pdfjs } = await import('react-pdf');
+      pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+    }
+    configurePdfjs();
+  }, []);
 
   useEffect(() => {
     if (containerRef.current) {
-        // Atur lebar awal untuk zoom responsif, dikurangi sedikit padding
         setInitialWidth(containerRef.current.clientWidth - 40);
     }
   }, []);
@@ -45,7 +52,7 @@ export default function PdfViewer({
 
   useEffect(() => {
     setIsZooming(true);
-    const timer = setTimeout(() => setIsZooming(false), 300); // Sesuaikan durasi jika perlu
+    const timer = setTimeout(() => setIsZooming(false), 300);
     return () => clearTimeout(timer);
   }, [zoomLevel]);
 
@@ -55,7 +62,6 @@ export default function PdfViewer({
   }
 
   function onDocumentLoadError(error: Error) {
-    // Peringatan AbortException tidak berbahaya dan dapat diabaikan
     if (error.name === 'AbortException') {
         return;
     }
@@ -89,14 +95,12 @@ export default function PdfViewer({
                   key={`page_${index + 1}`}
                   pageNumber={index + 1}
                   scale={zoomLevel}
-                  renderTextLayer={!isZooming} // Nonaktifkan renderTextLayer saat zoom
+                  renderTextLayer={!isZooming}
                   renderAnnotationLayer={false}
                   className="mb-4 shadow-lg"
                   width={initialWidth ? initialWidth : undefined}
                   onRenderSuccess={() => {
                       if (index === 0 && initialWidth) {
-                          // Setelah halaman pertama dirender dengan lebar awal,
-                          // nonaktifkan `width` dan biarkan `scale` yang mengontrol
                           setInitialWidth(null);
                       }
                   }}
