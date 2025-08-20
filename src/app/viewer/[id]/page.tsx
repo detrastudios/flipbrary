@@ -7,10 +7,10 @@ import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
 import ControlPanel from "@/components/control-panel";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ArrowLeft } from "lucide-react";
-import { useIndexedDB, Ebook } from "@/hooks/use-indexed-db";
+import { Menu, ArrowLeft } from "lucide-react";
+import { useIndexedDB } from "@/hooks/use-indexed-db";
 import Link from 'next/link';
 
 const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
@@ -40,8 +40,9 @@ export default function ViewerPage({ params }: ViewerPageProps) {
   
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
+  const ebookId = parseInt(params.id, 10);
+
   useEffect(() => {
-    const ebookId = parseInt(params.id, 10);
     if (!isNaN(ebookId)) {
         getEbookById(ebookId).then(ebook => {
             if (ebook && ebook.data instanceof Blob) {
@@ -59,7 +60,7 @@ export default function ViewerPage({ params }: ViewerPageProps) {
             }
         });
     }
-  }, [params.id, getEbookById, toast]);
+  }, [ebookId, getEbookById, toast]);
 
   useEffect(() => {
     if (debouncedSearchTerm) {
