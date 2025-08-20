@@ -27,8 +27,6 @@ export default function PdfViewer({
 }: PdfViewerProps) {
   const { toast } = useToast();
   const [numPages, setNumPages] = useState(0);
-  const [containerWidth, setContainerWidth] = useState(0);
-  const containerRef = React.useRef<HTMLDivElement>(null);
 
   const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: PDFDocumentProxy): void => {
     setNumPages(nextNumPages);
@@ -46,25 +44,8 @@ export default function PdfViewer({
     });
   }
 
-  useEffect(() => {
-    function handleResize() {
-      if (containerRef.current) {
-        // Adjust for padding (p-4 is 1rem on each side)
-        const padding = 32; 
-        setContainerWidth(containerRef.current.getBoundingClientRect().width - padding);
-      }
-    }
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
   return (
-    <div ref={containerRef} className="h-full w-full flex items-center justify-center">
+    <div className="h-full w-full flex items-center justify-center">
       {pdfUri ? (
         <Document
             file={pdfUri}
@@ -91,7 +72,7 @@ export default function PdfViewer({
                                     renderTextLayer={true}
                                     renderAnnotationLayer={false}
                                     className="shadow-lg mx-auto"
-                                    width={containerWidth ? containerWidth * zoomLevel : undefined}
+                                    scale={zoomLevel}
                                 />
                             </div>
                         </CarouselItem>
