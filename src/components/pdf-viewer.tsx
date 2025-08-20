@@ -54,7 +54,7 @@ export default function PdfViewer({
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-4 bg-muted/20">
-        <div className="overflow-auto h-[70vh] rounded-md flex items-center justify-center bg-gray-200 dark:bg-gray-800">
+        <div className="overflow-auto h-[70vh] rounded-md flex items-start justify-center bg-gray-200 dark:bg-gray-800">
           {pdfUri ? (
              <Document
                 file={pdfUri}
@@ -70,15 +70,19 @@ export default function PdfViewer({
                   <div className="text-destructive">Gagal memuat file PDF.</div>
                 }
              >
-                <Page
-                    pageNumber={currentPage}
+                {Array.from(new Array(totalPages), (el, index) => (
+                  <Page
+                    key={`page_${index + 1}`}
+                    pageNumber={index + 1}
                     scale={zoomLevel}
-                    renderTextLayer={false}
+                    renderTextLayer={true}
                     renderAnnotationLayer={false}
-                />
+                    className="mb-4"
+                  />
+                ))}
              </Document>
           ) : (
-            <div className="flex flex-col items-center gap-4 text-muted-foreground">
+            <div className="flex flex-col items-center gap-4 text-muted-foreground self-center">
               <FileQuestion className="h-16 w-16" />
               <p className="text-lg">Silakan unggah file PDF untuk melihatnya.</p>
             </div>
