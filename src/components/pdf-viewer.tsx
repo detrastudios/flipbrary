@@ -15,14 +15,12 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 type PdfViewerProps = {
   pdfUri: string | null;
-  zoomLevel: number;
   setTotalPages: (pages: number) => void;
   setApi?: (api: CarouselApi) => void;
 };
 
 export default function PdfViewer({
   pdfUri,
-  zoomLevel,
   setTotalPages: setTotalPagesProp,
   setApi,
 }: PdfViewerProps) {
@@ -72,8 +70,7 @@ export default function PdfViewer({
                                 pageNumber={index + 1}
                                 renderTextLayer={true}
                                 renderAnnotationLayer={false}
-                                className="shadow-lg"
-                                scale={zoomLevel}
+                                className="shadow-lg mx-auto"
                             />
                         </CarouselItem>
                     ))}
@@ -89,4 +86,3 @@ export default function PdfViewer({
     </div>
   );
 }
-

@@ -40,7 +40,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [ebookId, setEbookId] = useState<number | null>(null);
-  const [zoomLevel, setZoomLevel] = useState(1);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -105,7 +104,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     };
 
     carouselApi.on("select", onSelect);
-    // Set initial page
     onSelect(); 
 
     return () => {
@@ -128,15 +126,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const handlePrevPage = useCallback(() => {
     carouselApi?.scrollPrev();
   }, [carouselApi]);
-
-  const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 0.2, 3));
-  };
-
-  const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 0.2, 0.4));
-  };
-
 
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
@@ -174,9 +163,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
               isSearching={isSearching}
               onSuggestedTermClick={handleSuggestedTermClick}
               pdfLoaded={!!pdfDataUri}
-              zoomLevel={zoomLevel}
-              onZoomIn={handleZoomIn}
-              onZoomOut={handleZoomOut}
             />
           </SheetContent>
         </Sheet>
@@ -185,7 +171,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
       <main className="flex-1 relative flex items-center justify-center overflow-hidden">
         <PdfViewer
             pdfUri={pdfDataUri}
-            zoomLevel={zoomLevel}
             setTotalPages={setTotalPages}
             setApi={setCarouselApi}
         />
