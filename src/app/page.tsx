@@ -113,7 +113,7 @@ export default function LibraryPage() {
     <div className="min-h-screen bg-background text-foreground">
        <header className="p-4 border-b flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-sm z-10">
         <h1 className="text-2xl font-bold">PDFreeze Library</h1>
-        <Button onClick={() => setIsUploadDialogOpen(true)}>
+        <Button onClick={() => setIsUploadDialogOpen(true)} className="rounded-full">
           <Upload className="mr-2" />
           Unggah PDF Baru
         </Button>
@@ -168,16 +168,16 @@ export default function LibraryPage() {
         {ebooks.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             {ebooks.map((ebook) => (
-              <div key={ebook.id} className="group relative transition-all duration-300 hover:scale-105">
+              <div key={ebook.id} className="group relative transition-all duration-300 hover:scale-105 hover:shadow-2xl rounded-lg">
                 <Link href={`/viewer/${ebook.id}`} className="block text-center">
-                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center p-1 shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:border-primary border-2 border-transparent overflow-hidden">
+                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center p-1 shadow-md transition-all duration-300 group-hover:shadow-xl overflow-hidden">
                     {ebook.thumbnailUrl ? (
                       <Image 
                         src={ebook.thumbnailUrl} 
                         alt={`Cover of ${ebook.name}`} 
                         width={200}
                         height={300}
-                        className="object-cover w-full h-full"
+                        className="object-cover w-full h-full rounded-md"
                       />
                     ) : (
                       <BookOpen className="w-12 h-12 text-muted-foreground" />
