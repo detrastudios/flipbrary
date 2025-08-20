@@ -16,6 +16,9 @@ type PdfViewerProps = {
   zoomLevel: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
+  currentPage: number;
+  onPrevPage: () => void;
+  onNextPage: () => void;
   totalPages: number;
   setTotalPages: (pages: number) => void;
 };
@@ -25,6 +28,9 @@ export default function PdfViewer({
   zoomLevel,
   onZoomIn,
   onZoomOut,
+  currentPage,
+  onPrevPage,
+  onNextPage,
   totalPages,
   setTotalPages
 }: PdfViewerProps) {
@@ -61,16 +67,14 @@ export default function PdfViewer({
                   <div className="text-destructive">Gagal memuat file PDF.</div>
                 }
              >
-                {Array.from(new Array(totalPages), (el, index) => (
-                  <Page
-                    key={`page_${index + 1}`}
-                    pageNumber={index + 1}
-                    scale={zoomLevel}
-                    renderTextLayer={true}
-                    renderAnnotationLayer={false}
-                    className="mb-4"
-                  />
-                ))}
+                <Page
+                  key={`page_${currentPage}`}
+                  pageNumber={currentPage}
+                  scale={zoomLevel}
+                  renderTextLayer={true}
+                  renderAnnotationLayer={false}
+                  className="mb-4"
+                />
              </Document>
           ) : (
             <div className="flex flex-col items-center gap-4 text-muted-foreground self-center">
@@ -96,9 +100,17 @@ export default function PdfViewer({
         </div>
         <div className="flex-1 h-px bg-border mx-4"></div>
         <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={onPrevPage} disabled={!pdfUri || currentPage <= 1}>
+                <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only">Halaman Sebelumnya</span>
+            </Button>
             <span className="text-sm font-medium w-24 text-center">
-                Total Halaman: {pdfUri ? totalPages : "-"}
+                Halaman {pdfUri ? currentPage : "-"} dari {pdfUri ? totalPages : "-"}
             </span>
+            <Button variant="outline" size="icon" onClick={onNextPage} disabled={!pdfUri || currentPage >= totalPages}>
+                <ChevronRight className="h-4 w-4" />
+                <span className="sr-only">Halaman Berikutnya</span>
+            </Button>
         </div>
       </CardFooter>
     </Card>

@@ -26,6 +26,7 @@ export default function Home() {
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [pdfFileName, setPdfFileName] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -69,6 +70,7 @@ export default function Home() {
         setPdfDataUri(dataUri);
         setPdfFileName(file.name);
         setTotalPages(0);
+        setCurrentPage(1);
       };
       reader.readAsDataURL(file);
     }
@@ -80,6 +82,14 @@ export default function Home() {
 
   const handleZoomOut = () => {
     setZoomLevel((prev) => Math.max(prev - 0.1, 0.5));
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,6 +131,9 @@ export default function Home() {
               onZoomOut={handleZoomOut}
               totalPages={totalPages}
               setTotalPages={setTotalPages}
+              currentPage={currentPage}
+              onPrevPage={handlePrevPage}
+              onNextPage={handleNextPage}
             />
           </div>
         </div>
