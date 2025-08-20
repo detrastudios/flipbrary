@@ -40,7 +40,7 @@ export default function PdfViewer({
                 width={800}
                 height={1131}
                 className="shadow-lg border-0"
-                title="PDF Viewer"
+                title="Penampil PDF"
               />
             </div>
           ) : (
