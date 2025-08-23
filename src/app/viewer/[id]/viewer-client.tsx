@@ -13,7 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import SettingsPanel from "@/components/settings-panel";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useResizeObserver } from "@wojtekmaj/react-hooks";
+import { Input } from "@/components/ui/input";
+
 
 const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
   ssr: false,
@@ -38,6 +39,8 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const [ebookId, setEbookId] = useState<number | null>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
   const [zoomLevel, setZoomLevel] = useState(1.0); 
+  const [pageInput, setPageInput] = useState("1");
+
 
   useEffect(() => {
     if (id) {
@@ -73,7 +76,9 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     if (!carouselApi) return;
 
     const onSelect = () => {
-      setCurrentPage(carouselApi.selectedScrollSnap() + 1);
+      const newPage = carouselApi.selectedScrollSnap() + 1;
+      setCurrentPage(newPage);
+      setPageInput(newPage.toString());
     };
 
     carouselApi.on("select", onSelect);
@@ -100,6 +105,25 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const handleZoomOut = useCallback(() => {
     setZoomLevel(prevZoom => Math.max(prevZoom - 0.2, 0.4));
   }, []);
+
+  const handleGoToPage = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+        const pageNumber = parseInt(pageInput, 10);
+        if (!isNaN(pageNumber) && pageNumber >= 1 && pageNumber <= totalPages) {
+            carouselApi?.scrollTo(pageNumber - 1);
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Halaman Tidak Valid",
+                description: `Silakan masukkan nomor halaman antara 1 dan ${totalPages}.`,
+            });
+            // Reset input to current page if invalid
+            setPageInput(currentPage.toString());
+        }
+        e.currentTarget.blur();
+    }
+  };
+
 
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
@@ -131,14 +155,14 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
                   <span className="sr-only">Buka Pengaturan</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent className="flex flex-col">
+              <SheetContent className="flex flex-col w-[90%] sm:max-w-sm">
                 <SheetHeader>
                   <SheetTitle>Pengaturan</SheetTitle>
                   <SheetDescription>
                     Atur preferensi tampilan aplikasi Anda di sini.
                   </SheetDescription>
                 </SheetHeader>
-                 <ScrollArea className="py-4 flex-1">
+                 <ScrollArea className="py-4 flex-1 -mx-6 px-4">
                    <SettingsPanel />
                 </ScrollArea>
               </SheetContent>
@@ -156,14 +180,25 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
       </main>
 
       <footer className="flex items-center justify-center p-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
               <Button variant="outline" size="icon" onClick={handlePrevPage} disabled={!carouselApi?.canScrollPrev()}>
                   <ChevronsLeft />
                   <span className="sr-only">Halaman Sebelumnya</span>
               </Button>
-              <p className="text-sm text-muted-foreground">
-                  Halaman {currentPage} dari {totalPages}
-              </p>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <span>Halaman</span>
+                  <Input
+                    type="number"
+                    className="h-8 w-14 text-center"
+                    value={pageInput}
+                    onChange={(e) => setPageInput(e.target.value)}
+                    onKeyDown={handleGoToPage}
+                    onBlur={() => setPageInput(currentPage.toString())} // Revert if user clicks away
+                    min={1}
+                    max={totalPages}
+                  />
+                  <span>dari {totalPages}</span>
+              </div>
               <Button variant="outline" size="icon" onClick={handleNextPage} disabled={!carouselApi?.canScrollNext()}>
                   <ChevronsRight />
                   <span className="sr-only">Halaman Berikutnya</span>
