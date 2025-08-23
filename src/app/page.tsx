@@ -126,7 +126,7 @@ export default function LibraryPage() {
         <div className="flex items-center gap-2">
             <Button onClick={() => setIsUploadDialogOpen(true)} className="rounded-full">
               <Upload className="mr-2" />
-              Unggah PDF Baru
+              Unggah PDF
             </Button>
             <Sheet>
               <SheetTrigger asChild>
@@ -135,15 +135,17 @@ export default function LibraryPage() {
                   <span className="sr-only">Buka Pengaturan</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent className="flex flex-col">
+              <SheetContent className="flex flex-col w-[90%] sm:max-w-sm">
                 <SheetHeader>
                   <SheetTitle>Pengaturan</SheetTitle>
                   <SheetDescription>
                     Atur preferensi tampilan aplikasi Anda di sini.
                   </SheetDescription>
                 </SheetHeader>
-                <ScrollArea className="py-4 flex-1">
-                  <SettingsPanel />
+                <ScrollArea className="py-4 flex-1 -mx-6">
+                  <div className="px-6">
+                    <SettingsPanel />
+                  </div>
                 </ScrollArea>
               </SheetContent>
             </Sheet>
