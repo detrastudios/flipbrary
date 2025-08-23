@@ -108,7 +108,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
                 </Link>
             </Button>
             <div className="flex flex-col">
-              <h1 className="text-lg font-semibold truncate">PDF Viewer</h1>
+              <h1 className="text-lg font-semibold truncate">Flipbrary</h1>
             </div>
         </div>
         <div className="flex items-center gap-2">

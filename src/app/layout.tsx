@@ -4,7 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'PDFreeze',
+  title: 'Flipbrary by Sahijra',
   description: 'View and interact with your PDFs effortlessly.',
 };
 

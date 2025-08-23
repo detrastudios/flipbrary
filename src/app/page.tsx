@@ -112,7 +112,10 @@ export default function LibraryPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
        <header className="p-4 border-b flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-        <h1 className="text-2xl font-bold">PDFreeze Library</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Flipbrary</h1>
+          <p className="text-sm text-muted-foreground">by Sahijra</p>
+        </div>
         <Button onClick={() => setIsUploadDialogOpen(true)} className="rounded-full">
           <Upload className="mr-2" />
           Unggah PDF Baru
