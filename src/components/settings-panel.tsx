@@ -57,36 +57,39 @@ export default function SettingsPanel() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <Label className="text-base font-semibold">Mode Tampilan</Label>
-        <p className="text-sm text-muted-foreground">
+    <div className="space-y-4">
+      <div className="space-y-1.5">
+        <Label className="text-sm font-semibold">Mode Tampilan</Label>
+        <p className="text-xs text-muted-foreground">
           Pilih preferensi tema antarmuka aplikasi.
         </p>
       </div>
-       <div className="flex items-center space-x-2 rounded-lg border p-1 bg-muted">
+       <div className="flex items-center space-x-1 rounded-lg border p-1 bg-muted">
         <Button
           variant={theme === 'light' ? 'default' : 'ghost'}
           onClick={() => handleThemeChange('light')}
-          className={cn("flex-1 justify-center", theme === 'light' && 'bg-background text-foreground shadow-sm')}
+          size="sm"
+          className={cn("flex-1 justify-center text-xs", theme === 'light' && 'bg-background text-foreground shadow-sm')}
         >
-          <Sun className="mr-2 h-4 w-4" />
+          <Sun className="mr-1.5 h-3.5 w-3.5" />
           Terang
         </Button>
         <Button
           variant={theme === 'dark' ? 'default' : 'ghost'}
            onClick={() => handleThemeChange('dark')}
-          className={cn("flex-1 justify-center", theme === 'dark' && 'bg-background text-foreground shadow-sm')}
+          size="sm"
+          className={cn("flex-1 justify-center text-xs", theme === 'dark' && 'bg-background text-foreground shadow-sm')}
         >
-          <Moon className="mr-2 h-4 w-4" />
+          <Moon className="mr-1.5 h-3.5 w-3.5" />
           Gelap
         </Button>
         <Button
           variant={theme === 'system' ? 'default' : 'ghost'}
            onClick={() => handleThemeChange('system')}
-           className={cn("flex-1 justify-center", theme === 'system' && 'bg-background text-foreground shadow-sm')}
+           size="sm"
+           className={cn("flex-1 justify-center text-xs", theme === 'system' && 'bg-background text-foreground shadow-sm')}
         >
-          <Laptop className="mr-2 h-4 w-4" />
+          <Laptop className="mr-1.5 h-3.5 w-3.5" />
           Sistem
         </Button>
       </div>
@@ -99,20 +102,20 @@ export default function SettingsPanel() {
               Tentang Sahijra
             </div>
           </AccordionTrigger>
-          <AccordionContent className="text-sm text-muted-foreground space-y-4">
-            <div className="space-y-2">
+          <AccordionContent className="text-xs text-muted-foreground space-y-3">
+            <div className="space-y-1.5">
                 <p>🌙 <span className="font-semibold text-foreground">Tentang Sahijra</span></p>
                 <p>Sahijra (Sahabat Hijrah) adalah gerakan dakwah digital yang hadir untuk menemani langkah kaum muslimin dalam perjalanan hijrah menuju Allah ﷻ.</p>
                 <p>Kami percaya bahwa hijrah bukan sekadar tren, melainkan perjalanan seumur hidup—sebuah usaha untuk terus belajar, memperbaiki diri, dan istiqamah di atas Al-Qur’an dan As-Sunnah sesuai pemahaman Salafus Shalih.</p>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
                 <p>✨ <span className="font-semibold text-foreground">Misi Kami</span></p>
                 <p>📖 Menyebarkan ilmu syar’i yang benar dan bermanfaat</p>
                 <p>🤝 Menjadi sahabat dalam perjalanan hijrah muslimin</p>
                 <p>💻 Menghadirkan teknologi & media kreatif untuk dakwah</p>
                 <p>🌍 Menyebarkan kebaikan yang bisa diakses siapa saja, kapan saja</p>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
                 <p>💡 <span className="font-semibold text-foreground">Apa yang Kami Lakukan?</span></p>
                 <p>Sahabat Hijrah AI → asisten berbasis kecerdasan buatan untuk menjawab pertanyaan agama sesuai Qur’an & Sunnah</p>
                 <p>Produk Digital Edukatif → poster anak, peta kota aesthetic, dll. hasil penjualannya untuk support dakwah</p>
@@ -120,11 +123,11 @@ export default function SettingsPanel() {
                 <p>Kajian Rutin Offline → mempertemukan muslimin dalam majelis ilmu yang penuh berkah</p>
                 <p>Kajian Online & Self Development Islami (insyaAllah segera hadir) → membahas ilmu agama & pengembangan diri seorang muslim agar lebih bermanfaat dan istiqamah di jalan hijrah</p>
             </div>
-             <div className="space-y-2">
+             <div className="space-y-1.5">
                 <p>🕌 <span className="font-semibold text-foreground">Mengapa Harus Mendukung?</span></p>
                 <p>Karena setiap dukungan—baik lewat donasi, pembelian produk, maupun berbagi konten—akan menjadi bagian dari amal jariyah insyaAllah. “Perumpamaan orang yang menafkahkan hartanya di jalan Allah seperti sebutir benih yang menumbuhkan tujuh bulir, pada tiap bulir seratus biji.” (QS. Al-Baqarah: 261)</p>
             </div>
-             <div className="space-y-2">
+             <div className="space-y-1.5">
                 <p>🌱 Sahijra hadir bukan hanya sebagai nama, tapi sebagai teman perjalanan hijrahmu. Barakallahu fiikum.</p>
             </div>
           </AccordionContent>
@@ -137,14 +140,14 @@ export default function SettingsPanel() {
               Dukung Dakwah SAHIJRA
             </div>
           </AccordionTrigger>
-          <AccordionContent className="text-sm text-muted-foreground space-y-3">
+          <AccordionContent className="text-xs text-muted-foreground space-y-2">
             <p>Mari berjuang bersama dalam dakwah untuk menyebarkan ilmu yang bermanfaat. Dukungan Anda sangat berarti.</p>
             <div>
               <p className="font-semibold text-foreground">Bank Syariah Indonesia (BSI)</p>
               <div className="flex items-center justify-between">
                 <span>7283392559 (an. Denny Saputra)</span>
-                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopy('7283392559', 'Nomor rekening BSI')}>
-                  <Copy className="h-4 w-4" />
+                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopy('7283392559', 'Nomor rekening BSI')}>
+                  <Copy className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
@@ -160,12 +163,12 @@ export default function SettingsPanel() {
                Bantuan & Kontak
             </div>
           </AccordionTrigger>
-          <AccordionContent className="text-sm text-muted-foreground space-y-3">
+          <AccordionContent className="text-xs text-muted-foreground space-y-2">
             <p>Jika Anda memiliki pertanyaan, saran, atau masukan, jangan ragu untuk menghubungi kami melalui media sosial di bawah ini:</p>
             <div className="flex items-center justify-between">
               <span>sahijra.official@gmail.com</span>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopy('sahijra.official@gmail.com', 'Alamat email')}>
-                <Copy className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopy('sahijra.official@gmail.com', 'Alamat email')}>
+                <Copy className="h-3.5 w-3.5" />
               </Button>
             </div>
              <p>Instagram: <Link href="https://instagram.com/sahijra" target="_blank" rel="noopener noreferrer" className="text-primary underline">@sahijra</Link></p>
