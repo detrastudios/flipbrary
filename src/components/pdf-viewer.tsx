@@ -6,7 +6,7 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { FileQuestion } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { PDFDocumentProxy } from 'pdfjs-dist';
+import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from './ui/skeleton';
 
@@ -18,6 +18,8 @@ type PdfViewerProps = {
   setTotalPages: (pages: number) => void;
   setApi?: (api: CarouselApi) => void;
   zoomLevel: number;
+  isMagnifierEnabled: boolean;
+  setPageRef: (ref: HTMLDivElement | null) => void;
 };
 
 export default function PdfViewer({
@@ -25,11 +27,14 @@ export default function PdfViewer({
   setTotalPages: setTotalPagesProp,
   setApi,
   zoomLevel,
+  isMagnifierEnabled,
+  setPageRef,
 }: PdfViewerProps) {
   const { toast } = useToast();
   const [numPages, setNumPages] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const pageContainerRef = useRef<HTMLDivElement | null>(null);
 
   const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: PDFDocumentProxy): void => {
     setNumPages(nextNumPages);
@@ -48,11 +53,15 @@ export default function PdfViewer({
     console.error("Error loading PDF:", error);
   }
   
-  const onPageRenderError = (error: Error) => {
-    // AbortException sering terjadi saat komponen tidak lagi dipasang saat scroll cepat, abaikan
-    if (error.name === 'AbortException') {
-      return;
+  const onPageRenderSuccess = useCallback((page: PDFPageProxy) => {
+    // Pass the ref of the div containing the rendered page
+    if(pageContainerRef.current) {
+        setPageRef(pageContainerRef.current?.querySelector('.react-pdf__Page') as HTMLDivElement);
     }
+  }, [setPageRef]);
+
+  const onPageRenderError = (error: Error) => {
+    if (error.name === 'AbortException') return;
     toast({
         variant: "destructive",
         title: "Gagal merender halaman",
@@ -99,7 +108,7 @@ export default function PdfViewer({
                 <CarouselContent className="h-full">
                     {Array.from(new Array(numPages), (el, index) => (
                         <CarouselItem key={`page_${index + 1}`} className="h-full flex justify-center items-start overflow-auto">
-                            <div className="p-4"> 
+                            <div ref={pageContainerRef} className="p-4" style={{ cursor: isMagnifierEnabled ? 'none' : 'default' }}> 
                                 <Page
                                     pageNumber={index + 1}
                                     renderTextLayer={true}
@@ -107,6 +116,7 @@ export default function PdfViewer({
                                     className="shadow-lg mx-auto"
                                     width={(containerWidth > 0 ? (containerWidth - 32) : containerWidth) * zoomLevel}
                                     onRenderError={onPageRenderError}
+                                    onRenderSuccess={onPageRenderSuccess}
                                 />
                             </div>
                         </CarouselItem>
