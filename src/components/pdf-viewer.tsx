@@ -47,6 +47,20 @@ export default function PdfViewer({
     });
     console.error("Error loading PDF:", error);
   }
+  
+  const onPageRenderError = (error: Error) => {
+    // AbortException sering terjadi saat komponen tidak lagi dipasang saat scroll cepat, abaikan
+    if (error.name === 'AbortException') {
+      return;
+    }
+    toast({
+        variant: "destructive",
+        title: "Gagal merender halaman",
+        description: error.message,
+    });
+    console.error("Error rendering page:", error);
+  };
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -92,6 +106,7 @@ export default function PdfViewer({
                                     renderAnnotationLayer={false}
                                     className="shadow-lg mx-auto"
                                     width={containerWidth ? (containerWidth - 32) * zoomLevel : undefined}
+                                    onRenderError={onPageRenderError}
                                 />
                             </div>
                         </CarouselItem>
