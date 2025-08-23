@@ -5,11 +5,13 @@ import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut, Settings } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
 import Link from 'next/link';
 import type { CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
+import SettingsPanel from "@/components/settings-panel";
 
 const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
   ssr: false,
@@ -119,6 +121,25 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
           <Button variant="outline" size="icon" onClick={handleZoomIn} disabled={zoomLevel >= 2.0}>
             <ZoomIn className="h-4 w-4" />
           </Button>
+           <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Settings className="h-4 w-4" />
+                  <span className="sr-only">Buka Pengaturan</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Pengaturan</SheetTitle>
+                  <SheetDescription>
+                    Atur preferensi tampilan aplikasi Anda di sini.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="py-4">
+                  <SettingsPanel />
+                </div>
+              </SheetContent>
+            </Sheet>
         </div>
       </header>
 
