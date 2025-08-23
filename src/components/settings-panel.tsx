@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
-import { Sun, Moon, Laptop, Info, HeartHandshake, Mail, Copy } from 'lucide-react';
+import { Sun, Moon, Laptop, Info, HeartHandshake, Mail, Copy, Settings } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
@@ -58,6 +58,15 @@ export default function SettingsPanel() {
 
   return (
     <div className="space-y-4">
+       <div className="space-y-1.5">
+        <div className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            <Label className="text-sm font-semibold">Pengaturan</Label>
+        </div>
+        <p className="text-xs text-muted-foreground pl-6">
+          Atur preferensi tampilan aplikasi Anda di sini.
+        </p>
+      </div>
       <div className="space-y-1.5">
         <Label className="text-sm font-semibold">Mode Tampilan</Label>
         <p className="text-xs text-muted-foreground">

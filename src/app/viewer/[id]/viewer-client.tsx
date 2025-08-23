@@ -2,13 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { useDebounce } from "@/hooks/use-debounce";
-import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
 import ControlPanel from "@/components/control-panel";
 import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut, Search, Send, LoaderCircle, Sparkles } from "lucide-react";
+import { Menu, ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
 import Link from 'next/link';
 import type { CarouselApi } from "@/components/ui/carousel";
@@ -35,16 +33,11 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageInput, setPageInput] = useState("1");
   const [totalPages, setTotalPages] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [suggestedTerms, setSuggestedTerms] = useState<string[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [ebookId, setEbookId] = useState<number | null>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
   const [zoomLevel, setZoomLevel] = useState(1.0);
-
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
     if (id) {
@@ -76,29 +69,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   }, [ebookId, getEbookById, toast]);
 
   useEffect(() => {
-    if (debouncedSearchTerm) {
-      setIsSearching(true);
-      improveSearchTerms({ searchTerm: debouncedSearchTerm })
-        .then((response) => {
-          setSuggestedTerms(response.relatedTerms);
-        })
-        .catch((error) => {
-          console.error("Gagal mendapatkan saran:", error);
-          toast({
-            variant: "destructive",
-            title: "AI Error",
-            description: "Gagal mendapatkan saran pencarian dari AI.",
-          });
-        })
-        .finally(() => {
-          setIsSearching(false);
-        });
-    } else {
-      setSuggestedTerms([]);
-    }
-  }, [debouncedSearchTerm, toast]);
-
-  useEffect(() => {
     if (!carouselApi) return;
 
     const onSelect = () => {
@@ -114,14 +84,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
       carouselApi.off("select", onSelect);
     };
   }, [carouselApi]);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleSuggestedTermClick = (term: string) => {
-    setSearchTerm(term);
-  };
 
   const handleNextPage = useCallback(() => {
     carouselApi?.scrollNext();
@@ -190,18 +152,10 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
                <SheetHeader>
                  <SheetTitle>Panel Kontrol</SheetTitle>
                  <SheetDescription>
-                     Gunakan fitur di bawah untuk berinteraksi dengan PDF Anda.
+                     Atur preferensi tampilan aplikasi Anda di sini.
                  </SheetDescription>
              </SheetHeader>
-             <ControlPanel
-               searchTerm={searchTerm}
-               onSearchChange={handleSearchChange}
-               suggestedTerms={suggestedTerms}
-               isSearching={isSearching}
-               onSuggestedTermClick={handleSuggestedTermClick}
-               pdfLoaded={!!pdfDataUri}
-               pdfDataUri={pdfDataUri}
-             />
+             <ControlPanel />
            </SheetContent>
          </Sheet>
        </header>
