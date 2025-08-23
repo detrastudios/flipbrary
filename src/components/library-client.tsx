@@ -182,7 +182,7 @@ export default function LibraryClient() {
       
       <div className="p-4 md:p-8">
         {ebooks.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
             {ebooks.map((ebook) => (
               <div key={ebook.id} className="group relative transition-all duration-300 hover:scale-105 hover:shadow-2xl rounded-lg">
                 <Link href={`/viewer/${ebook.id}`} className="block text-center">
