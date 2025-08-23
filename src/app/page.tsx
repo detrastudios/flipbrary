@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, BookOpen, Trash2, FileText, LoaderCircle } from "lucide-react";
+import { Upload, BookOpen, Trash2, FileText, LoaderCircle, Settings } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useIndexedDB, Ebook } from "@/hooks/use-indexed-db";
@@ -11,6 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
+import SettingsPanel from "@/components/settings-panel";
+
 
 export default function LibraryPage() {
   const { toast } = useToast();
@@ -116,10 +119,31 @@ export default function LibraryPage() {
           <h1 className="text-2xl font-bold">Flipbrary</h1>
           <p className="text-sm text-muted-foreground">by Sahijra</p>
         </div>
-        <Button onClick={() => setIsUploadDialogOpen(true)} className="rounded-full">
-          <Upload className="mr-2" />
-          Unggah PDF Baru
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button onClick={() => setIsUploadDialogOpen(true)} className="rounded-full">
+              <Upload className="mr-2" />
+              Unggah PDF Baru
+            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Settings className="h-4 w-4" />
+                  <span className="sr-only">Buka Pengaturan</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Pengaturan</SheetTitle>
+                  <SheetDescription>
+                    Atur preferensi tampilan aplikasi Anda di sini.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="py-4">
+                  <SettingsPanel />
+                </div>
+              </SheetContent>
+            </Sheet>
+        </div>
       </header>
 
       <Dialog open={isUploadDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) resetUploadForm(); else setIsUploadDialogOpen(true); }}>
