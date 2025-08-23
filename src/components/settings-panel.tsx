@@ -99,10 +99,34 @@ export default function SettingsPanel() {
               Tentang Sahijra
             </div>
           </AccordionTrigger>
-          <AccordionContent className="text-sm text-muted-foreground space-y-3">
-             <p>Sahabat Hijrah (SAHIJRA) adalah asisten AI yang dirancang untuk membantu Anda mencari jawaban seputar agama Islam berdasarkan Al-Qur'an dan hadis shahih sesuai pemahaman Salafus Shalih.</p>
-             <p>Tujuan kami adalah menyediakan informasi yang cepat, akurat dan terpercaya untuk membantu perjalanan hijrah Anda. Tapi harus tetap diingat bahwa, AI tidaklah ma’shum (terjaga dari kesalahan) dan tidak 100% valid. Gunakanlah dengan bijak, jauhi perdebatan, selalu kroscek dan konsultasikan dengan Ustadz yang berilmu agar mendapatkan pemahaman yang mantap, terhindar dari kekeliruan dan tidak tergelincir dalam kesesatan.</p>
-             <p className="font-semibold text-foreground">created by Sahijra Team @sahijra</p>
+          <AccordionContent className="text-sm text-muted-foreground space-y-4">
+            <div className="space-y-2">
+                <p>🌙 <span className="font-semibold text-foreground">Tentang Sahijra</span></p>
+                <p>Sahijra (Sahabat Hijrah) adalah gerakan dakwah digital yang hadir untuk menemani langkah kaum muslimin dalam perjalanan hijrah menuju Allah ﷻ.</p>
+                <p>Kami percaya bahwa hijrah bukan sekadar tren, melainkan perjalanan seumur hidup—sebuah usaha untuk terus belajar, memperbaiki diri, dan istiqamah di atas Al-Qur’an dan As-Sunnah sesuai pemahaman Salafus Shalih.</p>
+            </div>
+            <div className="space-y-2">
+                <p>✨ <span className="font-semibold text-foreground">Misi Kami</span></p>
+                <p>📖 Menyebarkan ilmu syar’i yang benar dan bermanfaat</p>
+                <p>🤝 Menjadi sahabat dalam perjalanan hijrah muslimin</p>
+                <p>💻 Menghadirkan teknologi & media kreatif untuk dakwah</p>
+                <p>🌍 Menyebarkan kebaikan yang bisa diakses siapa saja, kapan saja</p>
+            </div>
+            <div className="space-y-2">
+                <p>💡 <span className="font-semibold text-foreground">Apa yang Kami Lakukan?</span></p>
+                <p>Sahabat Hijrah AI → asisten berbasis kecerdasan buatan untuk menjawab pertanyaan agama sesuai Qur’an & Sunnah</p>
+                <p>Produk Digital Edukatif → poster anak, peta kota aesthetic, dll. hasil penjualannya untuk support dakwah</p>
+                <p>Konten & Media Dakwah → menyampaikan ilmu dengan cara yang hangat, mudah dipahami, dan tetap menjaga adab</p>
+                <p>Kajian Rutin Offline → mempertemukan muslimin dalam majelis ilmu yang penuh berkah</p>
+                <p>Kajian Online & Self Development Islami (insyaAllah segera hadir) → membahas ilmu agama & pengembangan diri seorang muslim agar lebih bermanfaat dan istiqamah di jalan hijrah</p>
+            </div>
+             <div className="space-y-2">
+                <p>🕌 <span className="font-semibold text-foreground">Mengapa Harus Mendukung?</span></p>
+                <p>Karena setiap dukungan—baik lewat donasi, pembelian produk, maupun berbagi konten—akan menjadi bagian dari amal jariyah insyaAllah. “Perumpamaan orang yang menafkahkan hartanya di jalan Allah seperti sebutir benih yang menumbuhkan tujuh bulir, pada tiap bulir seratus biji.” (QS. Al-Baqarah: 261)</p>
+            </div>
+             <div className="space-y-2">
+                <p>🌱 Sahijra hadir bukan hanya sebagai nama, tapi sebagai teman perjalanan hijrahmu. Barakallahu fiikum.</p>
+            </div>
           </AccordionContent>
         </AccordionItem>
         
