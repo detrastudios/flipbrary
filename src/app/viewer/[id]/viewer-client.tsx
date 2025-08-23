@@ -138,10 +138,8 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
                     Atur preferensi tampilan aplikasi Anda di sini.
                   </SheetDescription>
                 </SheetHeader>
-                 <ScrollArea className="py-4 flex-1">
-                  <div className="px-4">
-                    <SettingsPanel />
-                  </div>
+                 <ScrollArea className="py-4 flex-1 px-4">
+                   <SettingsPanel />
                 </ScrollArea>
               </SheetContent>
             </Sheet>
