@@ -5,13 +5,14 @@ import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut, Settings } from "lucide-react";
+import { ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut, Settings, Library } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
 import Link from 'next/link';
 import type { CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import SettingsPanel from "@/components/settings-panel";
+import { useResizeObserver } from "@wojtekmaj/react-hooks";
 
 const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
   ssr: false,
@@ -102,14 +103,15 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
        <header className="flex items-center justify-between p-2 border-b bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
             <Button variant="outline" size="icon" asChild>
                 <Link href="/">
                     <ArrowLeft />
                     <span className="sr-only">Kembali ke Library</span>
                 </Link>
             </Button>
-            <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <Library className="h-6 w-6 text-primary" />
               <h1 className="text-lg font-semibold truncate">Flipbrary</h1>
             </div>
         </div>
