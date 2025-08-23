@@ -105,7 +105,7 @@ export default function PdfViewer({
                                     renderTextLayer={true}
                                     renderAnnotationLayer={false}
                                     className="shadow-lg mx-auto"
-                                    width={containerWidth ? (containerWidth - 32) * zoomLevel : undefined}
+                                    width={(containerWidth > 0 ? (containerWidth - 32) : containerWidth) * zoomLevel}
                                     onRenderError={onPageRenderError}
                                 />
                             </div>
