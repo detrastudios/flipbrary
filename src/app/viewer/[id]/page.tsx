@@ -5,8 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import React from 'react';
 
 export default function ViewerPage({ params }: { params: { id: string } }) {
-  // Akses params.id secara langsung di Server Component
-  const { id } = params;
+  // Perbaikan: Menggunakan React.use() untuk mengekstrak nilai dari params dengan aman.
+  const { id } = React.use(params);
 
   return (
     <Suspense fallback={<Skeleton className="w-full h-screen" />}>
