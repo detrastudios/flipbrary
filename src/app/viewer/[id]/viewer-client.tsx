@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut, Settings, Library } from "lucide-react";
+import { ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut, Settings, BookMarked } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
 import Link from 'next/link';
 import type { CarouselApi } from "@/components/ui/carousel";
@@ -111,7 +111,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
                 </Link>
             </Button>
             <div className="flex items-center gap-2">
-              <Library className="h-6 w-6 text-primary" />
+              <BookMarked className="h-6 w-6 text-primary" />
               <h1 className="text-lg font-semibold truncate">Flipbrary</h1>
             </div>
         </div>

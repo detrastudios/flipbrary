@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, BookOpen, Trash2, LoaderCircle, Settings, Library } from "lucide-react";
+import { Upload, BookOpen, Trash2, LoaderCircle, Settings, BookMarked } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useIndexedDB, Ebook } from "@/hooks/use-indexed-db";
@@ -116,7 +116,7 @@ export default function LibraryPage() {
     <div className="min-h-screen bg-background text-foreground">
        <header className="p-4 border-b flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-sm z-10">
         <div className="flex items-center gap-3">
-          <Library className="h-8 w-8 text-primary" />
+          <BookMarked className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">Flipbrary</h1>
             <p className="text-sm text-muted-foreground">by Sahijra</p>
