@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import SettingsPanel from "@/components/settings-panel";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 
 export default function LibraryPage() {
@@ -141,9 +142,11 @@ export default function LibraryPage() {
                     Atur preferensi tampilan aplikasi Anda di sini.
                   </SheetDescription>
                 </SheetHeader>
-                <div className="py-4 flex-1 overflow-y-auto">
-                  <SettingsPanel />
-                </div>
+                <ScrollArea className="py-4 flex-1">
+                  <div className="px-4">
+                    <SettingsPanel />
+                  </div>
+                </ScrollArea>
               </SheetContent>
             </Sheet>
         </div>
