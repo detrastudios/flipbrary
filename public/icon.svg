@@ -1,0 +1,20 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+    path, polygon {
+      fill: hsl(240 5.9% 10%);
+    }
+    @media (prefers-color-scheme: dark) {
+      path, polygon {
+        fill: hsl(0 0% 98%);
+      }
+      polygon {
+        fill: hsl(240 5.9% 10%);
+      }
+    }
+  </style>
+  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20v60a2 2 0 0 1-2 2H6.5A2.5 2.5 0 0 1 4 76.5V19.5Z"></path>
+  <path d="M20 17h56a2 2 0 0 1 2 2v57.5a2.5 2.5 0 0 1-2.5 2.5H20V17Z"></path>
+  <path d="M20 17h55a2 2 0 0 1 2 2v60a2 2 0 0 1-2 2h-2V34a6 6 0 0 0-6-6H20V17Z"></path>
+  <polygon points="20 17,20 28,31 17"></polygon>
+</svg>
