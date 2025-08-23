@@ -1,14 +1,12 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
-import ControlPanel from "@/components/control-panel";
 import { useToast } from "@/hooks/use-toast";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
-import Link from 'next/link';
 import type { CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -33,7 +31,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageInput, setPageInput] = useState("1");
   const [totalPages, setTotalPages] = useState(0);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [ebookId, setEbookId] = useState<number | null>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
@@ -93,14 +90,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     carouselApi?.scrollPrev();
   }, [carouselApi]);
 
-  const handleZoomIn = useCallback(() => {
-    setZoomLevel(prevZoom => Math.min(prevZoom + 0.2, 2.0));
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    setZoomLevel(prevZoom => Math.max(prevZoom - 0.2, 0.4));
-  }, []);
-
   const handleGoToPage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const pageNumber = parseInt(pageInput, 10);
@@ -118,56 +107,15 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
-        <header className="flex items-center justify-between p-2 border-b bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
-         <div className="flex items-center gap-2">
-             <Button variant="outline" size="icon" asChild>
-                 <Link href="/">
-                     <ArrowLeft />
-                     <span className="sr-only">Kembali ke Library</span>
-                 </Link>
-             </Button>
-             <div className="flex flex-col">
-               <h1 className="text-lg font-semibold truncate">PDF Viewer</h1>
-             </div>
-         </div>
-         <div className="flex items-center gap-2">
-           <Button variant="outline" size="icon" onClick={handleZoomOut} disabled={zoomLevel <= 0.4}>
-             <ZoomOut className="h-4 w-4" />
-           </Button>
-           <span className="text-sm font-medium w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
-           <Button variant="outline" size="icon" onClick={handleZoomIn} disabled={zoomLevel >= 2.0}>
-             <ZoomIn className="h-4 w-4" />
-           </Button>
-         </div>
-         
-         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-           <SheetTrigger asChild>
-             <Button variant="ghost" size="icon">
-               <Menu className="h-6 w-6" />
-               <span className="sr-only">Buka Panel Kontrol</span>
-             </Button>
-           </SheetTrigger>
-           <SheetContent side="right" className="w-full sm:max-w-md z-30 flex flex-col">
-               <SheetHeader>
-                 <SheetTitle>Panel Kontrol</SheetTitle>
-                 <SheetDescription>
-                     Atur preferensi tampilan aplikasi Anda di sini.
-                 </SheetDescription>
-             </SheetHeader>
-             <ControlPanel />
-           </SheetContent>
-         </Sheet>
-       </header>
-
-       <main className="flex-1 relative flex items-center justify-center overflow-hidden">
+    <div className="h-[calc(100vh-57px)] w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
+       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
          <PdfViewer
              pdfUri={pdfDataUri}
              setTotalPages={setTotalPages}
              setApi={setCarouselApi}
              zoomLevel={zoomLevel}
          />
-       </main>
+       </div>
 
        <footer className="flex items-center justify-center p-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
            <div className="flex items-center gap-2">

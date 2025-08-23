@@ -2,6 +2,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import Header from '@/components/header';
 
 export const metadata: Metadata = {
   title: 'Flipbrary by Sahijra',
@@ -52,7 +53,12 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        {children}
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-1">
+            {children}
+          </main>
+        </div>
         <Toaster />
       </body>
     </html>
