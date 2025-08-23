@@ -162,7 +162,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
                     Atur preferensi tampilan aplikasi Anda di sini.
                   </SheetDescription>
                 </SheetHeader>
-                 <ScrollArea className="py-4 flex-1 -mx-6 px-4">
+                 <ScrollArea className="py-4 flex-1 -mx-6 px-6">
                    <SettingsPanel />
                 </ScrollArea>
               </SheetContent>
@@ -189,7 +189,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
                   <span>Halaman</span>
                   <Input
                     type="number"
-                    className="h-8 w-14 text-center"
+                    className="h-8 w-16 text-center"
                     value={pageInput}
                     onChange={(e) => setPageInput(e.target.value)}
                     onKeyDown={handleGoToPage}
@@ -207,4 +207,5 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
       </footer>
     </div>
   );
-}
+
+    
