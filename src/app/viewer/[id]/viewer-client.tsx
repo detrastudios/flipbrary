@@ -130,14 +130,14 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
                   <span className="sr-only">Buka Pengaturan</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent className="flex flex-col">
                 <SheetHeader>
                   <SheetTitle>Pengaturan</SheetTitle>
                   <SheetDescription>
                     Atur preferensi tampilan aplikasi Anda di sini.
                   </SheetDescription>
                 </SheetHeader>
-                <div className="py-4">
+                <div className="py-4 flex-1 overflow-y-auto">
                   <SettingsPanel />
                 </div>
               </SheetContent>
