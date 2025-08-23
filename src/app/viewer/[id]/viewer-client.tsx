@@ -1,13 +1,11 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
-import SettingsPanel from "@/components/control-panel";
 import { useToast } from "@/hooks/use-toast";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
 import Link from 'next/link';
 import type { CarouselApi } from "@/components/ui/carousel";
@@ -32,7 +30,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [ebookId, setEbookId] = useState<number | null>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
@@ -123,24 +120,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
             <ZoomIn className="h-4 w-4" />
           </Button>
         </div>
-        
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Buka Pengaturan</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-full sm:max-w-md z-30">
-             <SheetHeader>
-                <SheetTitle>Pengaturan</SheetTitle>
-                <SheetDescription>
-                    Kelola preferensi dan lihat informasi aplikasi di sini.
-                </SheetDescription>
-            </SheetHeader>
-            <SettingsPanel />
-          </SheetContent>
-        </Sheet>
       </header>
 
       <main className="flex-1 relative flex items-center justify-center overflow-hidden">
