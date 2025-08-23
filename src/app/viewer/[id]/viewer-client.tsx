@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -106,6 +106,15 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     }
   };
 
+  const handleZoomIn = () => {
+    setZoomLevel(prevZoom => Math.min(prevZoom + 0.2, 2.5));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prevZoom => Math.max(prevZoom - 0.2, 0.5));
+  };
+
+
   return (
     <div className="h-[calc(100vh-57px)] w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
        <div className="flex-1 relative flex items-center justify-center overflow-hidden">
@@ -118,29 +127,42 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
        </div>
 
        <footer className="flex items-center justify-center p-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
-           <div className="flex items-center gap-2">
-               <Button variant="outline" size="icon" onClick={handlePrevPage} disabled={!carouselApi?.canScrollPrev()}>
-                   <ChevronsLeft />
-                   <span className="sr-only">Halaman Sebelumnya</span>
-               </Button>
-                <form onSubmit={handleGoToPage} className="flex items-center gap-1.5">
-                    <Input
-                        type="number"
-                        min="1"
-                        max={totalPages}
-                        value={pageInput}
-                        onChange={(e) => setPageInput(e.target.value)}
-                        onBlur={() => { if (pageInput === '') setPageInput(String(currentPage)); }} // Revert if empty
-                        className="h-8 w-16 text-center"
-                        aria-label="Nomor halaman"
-                        disabled={totalPages === 0}
-                    />
-                    <span className="text-sm text-muted-foreground">dari {totalPages}</span>
-                </form>
-               <Button variant="outline" size="icon" onClick={handleNextPage} disabled={!carouselApi?.canScrollNext()}>
-                   <ChevronsRight />
-                   <span className="sr-only">Halaman Berikutnya</span>
-               </Button>
+           <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={handleZoomOut} disabled={zoomLevel <= 0.5}>
+                        <ZoomOut />
+                        <span className="sr-only">Perkecil</span>
+                    </Button>
+                    <span className="text-sm font-medium w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
+                    <Button variant="outline" size="icon" onClick={handleZoomIn} disabled={zoomLevel >= 2.5}>
+                        <ZoomIn />
+                        <span className="sr-only">Perbesar</span>
+                    </Button>
+                </div>
+               <div className="flex items-center gap-2">
+                   <Button variant="outline" size="icon" onClick={handlePrevPage} disabled={!carouselApi?.canScrollPrev()}>
+                       <ChevronsLeft />
+                       <span className="sr-only">Halaman Sebelumnya</span>
+                   </Button>
+                    <form onSubmit={handleGoToPage} className="flex items-center gap-1.5">
+                        <Input
+                            type="number"
+                            min="1"
+                            max={totalPages}
+                            value={pageInput}
+                            onChange={(e) => setPageInput(e.target.value)}
+                            onBlur={() => { if (pageInput === '') setPageInput(String(currentPage)); }} // Revert if empty
+                            className="h-8 w-16 text-center"
+                            aria-label="Nomor halaman"
+                            disabled={totalPages === 0}
+                        />
+                        <span className="text-sm text-muted-foreground">/ {totalPages}</span>
+                    </form>
+                   <Button variant="outline" size="icon" onClick={handleNextPage} disabled={!carouselApi?.canScrollNext()}>
+                       <ChevronsRight />
+                       <span className="sr-only">Halaman Berikutnya</span>
+                   </Button>
+               </div>
            </div>
        </footer>
      </div>
