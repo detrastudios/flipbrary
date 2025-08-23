@@ -148,15 +148,6 @@ export default function SettingsPanel() {
                 </Button>
               </div>
             </div>
-            <div>
-               <p className="font-semibold text-foreground">Bank Mandiri</p>
-               <div className="flex items-center justify-between">
-                <span>9000006111349 (an. Denny Saputra)</span>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopy('9000006111349', 'Nomor rekening Mandiri')}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
              <p>Atau melalui <Link href="https://lynk.id/sahijra" target="_blank" rel="noopener noreferrer" className="text-primary underline">Lynk.id Sahijra</Link></p>
             <p className="italic">Jazakumullahu khairan. Semoga Allah ﷻ membalas kebaikan Anda.</p>
           </AccordionContent>
