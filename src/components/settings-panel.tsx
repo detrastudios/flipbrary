@@ -103,7 +103,7 @@ export default function SettingsPanel() {
         </Button>
       </div>
       
-       <Accordion type="single" collapsible className="w-full">
+       <Accordion type="single" collapsible defaultValue="about" className="w-full">
         <AccordionItem value="about">
           <AccordionTrigger>
             <div className="flex items-center gap-2">
