@@ -1,20 +1,19 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
+import { useDebounce } from "@/hooks/use-debounce";
+import { improveSearchTerms } from "@/ai/flows/improve-search-terms";
+import ControlPanel from "@/components/control-panel";
 import { useToast } from "@/hooks/use-toast";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut, Settings, BookMarked } from "lucide-react";
+import { Menu, ArrowLeft, ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut, Search, Send, LoaderCircle, Sparkles } from "lucide-react";
 import { useIndexedDB } from "@/hooks/use-indexed-db";
 import Link from 'next/link';
 import type { CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
-import SettingsPanel from "@/components/settings-panel";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-
 
 const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
   ssr: false,
@@ -34,13 +33,18 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const { getEbookById } = useIndexedDB();
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageInput, setPageInput] = useState("1");
   const [totalPages, setTotalPages] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [suggestedTerms, setSuggestedTerms] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const [ebookId, setEbookId] = useState<number | null>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
-  const [zoomLevel, setZoomLevel] = useState(1.0); 
-  const [pageInput, setPageInput] = useState("1");
+  const [zoomLevel, setZoomLevel] = useState(1.0);
 
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
     if (id) {
@@ -61,7 +65,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
                 };
                 reader.readAsDataURL(ebook.data);
             } else if (!ebook) {
-                 toast({
+                toast({
                     variant: "destructive",
                     title: "Ebook tidak ditemukan",
                     description: "Tidak dapat menemukan ebook di library Anda.",
@@ -71,6 +75,28 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     }
   }, [ebookId, getEbookById, toast]);
 
+  useEffect(() => {
+    if (debouncedSearchTerm) {
+      setIsSearching(true);
+      improveSearchTerms({ searchTerm: debouncedSearchTerm })
+        .then((response) => {
+          setSuggestedTerms(response.relatedTerms);
+        })
+        .catch((error) => {
+          console.error("Gagal mendapatkan saran:", error);
+          toast({
+            variant: "destructive",
+            title: "AI Error",
+            description: "Gagal mendapatkan saran pencarian dari AI.",
+          });
+        })
+        .finally(() => {
+          setIsSearching(false);
+        });
+    } else {
+      setSuggestedTerms([]);
+    }
+  }, [debouncedSearchTerm, toast]);
 
   useEffect(() => {
     if (!carouselApi) return;
@@ -78,17 +104,24 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     const onSelect = () => {
       const newPage = carouselApi.selectedScrollSnap() + 1;
       setCurrentPage(newPage);
-      setPageInput(newPage.toString());
+      setPageInput(String(newPage));
     };
 
     carouselApi.on("select", onSelect);
-    onSelect(); 
+    onSelect(); // Panggil sekali untuk inisialisasi
 
     return () => {
       carouselApi.off("select", onSelect);
     };
   }, [carouselApi]);
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSuggestedTermClick = (term: string) => {
+    setSearchTerm(term);
+  };
 
   const handleNextPage = useCallback(() => {
     carouselApi?.scrollNext();
@@ -106,106 +139,108 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     setZoomLevel(prevZoom => Math.max(prevZoom - 0.2, 0.4));
   }, []);
 
-  const handleGoToPage = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-        const pageNumber = parseInt(pageInput, 10);
-        if (!isNaN(pageNumber) && pageNumber >= 1 && pageNumber <= totalPages) {
-            carouselApi?.scrollTo(pageNumber - 1);
-        } else {
-            toast({
-                variant: "destructive",
-                title: "Halaman Tidak Valid",
-                description: `Silakan masukkan nomor halaman antara 1 dan ${totalPages}.`,
-            });
-            // Reset input to current page if invalid
-            setPageInput(currentPage.toString());
-        }
-        e.currentTarget.blur();
+  const handleGoToPage = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const pageNumber = parseInt(pageInput, 10);
+    if (!isNaN(pageNumber) && pageNumber >= 1 && pageNumber <= totalPages) {
+      carouselApi?.scrollTo(pageNumber - 1);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Halaman Tidak Valid",
+        description: `Silakan masukkan nomor antara 1 dan ${totalPages}.`,
+      });
+      // Reset input ke halaman saat ini jika tidak valid
+      setPageInput(String(currentPage));
     }
   };
 
-
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
-       <header className="flex items-center justify-between p-2 border-b bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
-        <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" asChild>
-                <Link href="/">
-                    <ArrowLeft />
-                    <span className="sr-only">Kembali ke Library</span>
-                </Link>
-            </Button>
-            <div className="flex items-center gap-2">
-              <BookMarked className="h-6 w-6 text-primary" />
-              <h1 className="text-lg font-semibold truncate">Flipbrary</h1>
-            </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={handleZoomOut} disabled={zoomLevel <= 0.4}>
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <span className="text-sm font-medium w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
-          <Button variant="outline" size="icon" onClick={handleZoomIn} disabled={zoomLevel >= 2.0}>
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-           <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Settings className="h-4 w-4" />
-                  <span className="sr-only">Buka Pengaturan</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="flex flex-col w-[90%] sm:max-w-sm">
-                <SheetHeader>
-                  <SheetTitle>Pengaturan</SheetTitle>
-                  <SheetDescription>
-                    Atur preferensi tampilan aplikasi Anda di sini.
-                  </SheetDescription>
-                </SheetHeader>
-                 <ScrollArea className="py-4 flex-1 -mx-6 px-6">
-                   <SettingsPanel />
-                </ScrollArea>
-              </SheetContent>
-            </Sheet>
-        </div>
-      </header>
+        <header className="flex items-center justify-between p-2 border-b bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
+         <div className="flex items-center gap-2">
+             <Button variant="outline" size="icon" asChild>
+                 <Link href="/">
+                     <ArrowLeft />
+                     <span className="sr-only">Kembali ke Library</span>
+                 </Link>
+             </Button>
+             <div className="flex flex-col">
+               <h1 className="text-lg font-semibold truncate">PDF Viewer</h1>
+             </div>
+         </div>
+         <div className="flex items-center gap-2">
+           <Button variant="outline" size="icon" onClick={handleZoomOut} disabled={zoomLevel <= 0.4}>
+             <ZoomOut className="h-4 w-4" />
+           </Button>
+           <span className="text-sm font-medium w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
+           <Button variant="outline" size="icon" onClick={handleZoomIn} disabled={zoomLevel >= 2.0}>
+             <ZoomIn className="h-4 w-4" />
+           </Button>
+         </div>
+         
+         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+           <SheetTrigger asChild>
+             <Button variant="ghost" size="icon">
+               <Menu className="h-6 w-6" />
+               <span className="sr-only">Buka Panel Kontrol</span>
+             </Button>
+           </SheetTrigger>
+           <SheetContent side="right" className="w-full sm:max-w-md z-30 flex flex-col">
+               <SheetHeader>
+                 <SheetTitle>Panel Kontrol</SheetTitle>
+                 <SheetDescription>
+                     Gunakan fitur di bawah untuk berinteraksi dengan PDF Anda.
+                 </SheetDescription>
+             </SheetHeader>
+             <ControlPanel
+               searchTerm={searchTerm}
+               onSearchChange={handleSearchChange}
+               suggestedTerms={suggestedTerms}
+               isSearching={isSearching}
+               onSuggestedTermClick={handleSuggestedTermClick}
+               pdfLoaded={!!pdfDataUri}
+               pdfDataUri={pdfDataUri}
+             />
+           </SheetContent>
+         </Sheet>
+       </header>
 
-      <main className="flex-1 relative flex items-center justify-center overflow-hidden">
-        <PdfViewer
-            pdfUri={pdfDataUri}
-            setTotalPages={setTotalPages}
-            setApi={setCarouselApi}
-            zoomLevel={zoomLevel}
-        />
-      </main>
+       <main className="flex-1 relative flex items-center justify-center overflow-hidden">
+         <PdfViewer
+             pdfUri={pdfDataUri}
+             setTotalPages={setTotalPages}
+             setApi={setCarouselApi}
+             zoomLevel={zoomLevel}
+         />
+       </main>
 
-      <footer className="flex items-center justify-center p-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
-          <div className="flex items-center gap-2 md:gap-4">
-              <Button variant="outline" size="icon" onClick={handlePrevPage} disabled={!carouselApi?.canScrollPrev()}>
-                  <ChevronsLeft />
-                  <span className="sr-only">Halaman Sebelumnya</span>
-              </Button>
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <span>Halaman</span>
-                  <Input
-                    type="number"
-                    className="h-8 w-16 text-center"
-                    value={pageInput}
-                    onChange={(e) => setPageInput(e.target.value)}
-                    onKeyDown={handleGoToPage}
-                    onBlur={() => setPageInput(currentPage.toString())} // Revert if user clicks away
-                    min={1}
-                    max={totalPages}
-                  />
-                  <span>dari {totalPages}</span>
-              </div>
-              <Button variant="outline" size="icon" onClick={handleNextPage} disabled={!carouselApi?.canScrollNext()}>
-                  <ChevronsRight />
-                  <span className="sr-only">Halaman Berikutnya</span>
-              </Button>
-          </div>
-      </footer>
-    </div>
-  );
-
-    
+       <footer className="flex items-center justify-center p-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
+           <div className="flex items-center gap-2">
+               <Button variant="outline" size="icon" onClick={handlePrevPage} disabled={!carouselApi?.canScrollPrev()}>
+                   <ChevronsLeft />
+                   <span className="sr-only">Halaman Sebelumnya</span>
+               </Button>
+                <form onSubmit={handleGoToPage} className="flex items-center gap-1.5">
+                    <Input
+                        type="number"
+                        min="1"
+                        max={totalPages}
+                        value={pageInput}
+                        onChange={(e) => setPageInput(e.target.value)}
+                        onBlur={() => { if (pageInput === '') setPageInput(String(currentPage)); }} // Revert if empty
+                        className="h-8 w-16 text-center"
+                        aria-label="Nomor halaman"
+                        disabled={totalPages === 0}
+                    />
+                    <span className="text-sm text-muted-foreground">dari {totalPages}</span>
+                </form>
+               <Button variant="outline" size="icon" onClick={handleNextPage} disabled={!carouselApi?.canScrollNext()}>
+                   <ChevronsRight />
+                   <span className="sr-only">Halaman Berikutnya</span>
+               </Button>
+           </div>
+       </footer>
+     </div>
+   );
+}
