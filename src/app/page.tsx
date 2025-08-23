@@ -142,7 +142,7 @@ export default function LibraryPage() {
                     Atur preferensi tampilan aplikasi Anda di sini.
                   </SheetDescription>
                 </SheetHeader>
-                <ScrollArea className="py-4 flex-1 px-4">
+                <ScrollArea className="py-4 flex-1">
                   <SettingsPanel />
                 </ScrollArea>
               </SheetContent>
