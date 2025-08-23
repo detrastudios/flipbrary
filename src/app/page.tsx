@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, BookOpen, Trash2, LoaderCircle, Settings, BookMarked } from "lucide-react";
+import { Upload, BookOpen, Trash2, LoaderCircle, Settings, BookMarked, Star } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useIndexedDB, Ebook } from "@/hooks/use-indexed-db";
@@ -18,7 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function LibraryPage() {
   const { toast } = useToast();
-  const { ebooks, addEbook, deleteEbook, loading } = useIndexedDB();
+  const { ebooks, addEbook, deleteEbook, loading, toggleFavorite } = useIndexedDB();
   
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [newEbookName, setNewEbookName] = useState("");
@@ -59,7 +59,7 @@ export default function LibraryPage() {
     setIsUploading(true);
 
     try {
-        const newEbook: Omit<Ebook, 'id' | 'thumbnailUrl'> = {
+        const newEbook: Omit<Ebook, 'id' | 'thumbnailUrl' | 'isFavorite'> = {
             name: newEbookName.trim(),
             data: selectedFile,
         };
@@ -104,6 +104,25 @@ export default function LibraryPage() {
       });
     }
   };
+  
+  const handleToggleFavorite = async (event: React.MouseEvent, ebook: Ebook) => {
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      await toggleFavorite(ebook.id, !ebook.isFavorite);
+      toast({
+        title: ebook.isFavorite ? "Dihapus dari favorit" : "Ditambahkan ke favorit",
+        description: `"${ebook.name}" telah diperbarui.`,
+      });
+    } catch (error) {
+      console.error("Gagal mengubah status favorit", error);
+      toast({
+        variant: "destructive",
+        title: "Gagal Memperbarui Favorit",
+        description: "Tidak dapat mengubah status favorit ebook.",
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -124,7 +143,7 @@ export default function LibraryPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-            <Button onClick={() => setIsUploadDialogOpen(true)} className="rounded-full">
+            <Button onClick={() => setIsUploadDialogOpen(true)} >
               <Upload className="mr-2" />
               Unggah PDF
             </Button>
@@ -135,17 +154,15 @@ export default function LibraryPage() {
                   <span className="sr-only">Buka Pengaturan</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent className="flex flex-col w-[90%] sm:max-w-sm">
+              <SheetContent className="flex flex-col">
                 <SheetHeader>
                   <SheetTitle>Pengaturan</SheetTitle>
                   <SheetDescription>
                     Atur preferensi tampilan aplikasi Anda di sini.
                   </SheetDescription>
                 </SheetHeader>
-                <ScrollArea className="py-4 flex-1 -mx-6">
-                  <div className="px-6">
-                    <SettingsPanel />
-                  </div>
+                <ScrollArea className="py-4 flex-1 -mx-6 px-4">
+                  <SettingsPanel />
                 </ScrollArea>
               </SheetContent>
             </Sheet>
@@ -215,6 +232,15 @@ export default function LibraryPage() {
                   </p>
                 </Link>
                 <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute -top-3 -left-3 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-yellow-400 hover:text-yellow-300"
+                  onClick={(e) => handleToggleFavorite(e, ebook)}
+                  aria-label="Favoritkan Ebook"
+                >
+                  <Star className={ebook.isFavorite ? "fill-current" : ""} />
+                </Button>
+                <Button
                   variant="destructive"
                   size="icon"
                   className="absolute -top-3 -right-3 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -240,3 +266,5 @@ export default function LibraryPage() {
     </div>
   );
 }
+
+    

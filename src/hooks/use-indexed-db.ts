@@ -6,20 +6,21 @@ import { openDB, IDBPDatabase, DBSchema } from 'idb';
 
 const DB_NAME = 'EbookLibraryDB';
 const STORE_NAME = 'ebooks';
-const DB_VERSION = 2;
+const DB_VERSION = 3; // Version incremented for schema change
 
 export interface Ebook {
   id: number;
   name: string;
   data: File | Blob;
   thumbnailUrl?: string;
+  isFavorite?: boolean; // New property
 }
 
 interface EbookDB extends DBSchema {
   [STORE_NAME]: {
     key: number;
     value: Ebook;
-    indexes: { name: string };
+    indexes: { name: string; isFavorite: 'isFavorite' }; // New index
   };
 }
 
@@ -38,6 +39,12 @@ const getDb = () => {
             autoIncrement: true,
           });
           store.createIndex('name', 'name');
+          store.createIndex('isFavorite', 'isFavorite');
+        } else {
+            const store = db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME);
+            if (!store.indexNames.contains('isFavorite')) {
+                store.createIndex('isFavorite', 'isFavorite');
+            }
         }
       },
     });
@@ -91,7 +98,7 @@ export function useIndexedDB() {
     const db = await getDb();
     if (!db) return;
     const allEbooks = await db.getAll(STORE_NAME);
-    setEbooks(allEbooks);
+    setEbooks(allEbooks.sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0) || a.name.localeCompare(b.name)));
     setLoading(false);
   }, []);
 
@@ -99,12 +106,12 @@ export function useIndexedDB() {
     getAllEbooks();
   }, [getAllEbooks]);
 
-  const addEbook = async (ebook: Omit<Ebook, 'id' | 'thumbnailUrl'>) => {
+  const addEbook = async (ebook: Omit<Ebook, 'id' | 'thumbnailUrl' | 'isFavorite'>) => {
     const db = await getDb();
     if (!db) return;
     const thumbnailUrl = await createPdfThumbnail(ebook.data);
-    const ebookWithThumbnail: Omit<Ebook, 'id'> = { ...ebook, thumbnailUrl };
-    await db.add(STORE_NAME, ebookWithThumbnail as Ebook);
+    const ebookWithDetails: Omit<Ebook, 'id'> = { ...ebook, thumbnailUrl, isFavorite: false };
+    await db.add(STORE_NAME, ebookWithDetails as Ebook);
     await getAllEbooks(); // Refresh list
   };
 
@@ -121,5 +128,18 @@ export function useIndexedDB() {
     return db.get(STORE_NAME, id);
   }, []);
 
-  return { ebooks, addEbook, deleteEbook, getEbookById, loading };
+  const toggleFavorite = async (id: number, isFavorite: boolean) => {
+    const db = await getDb();
+    if (!db) return;
+    const ebook = await db.get(STORE_NAME, id);
+    if (ebook) {
+      ebook.isFavorite = isFavorite;
+      await db.put(STORE_NAME, ebook);
+      await getAllEbooks(); // Refresh list
+    }
+  };
+
+  return { ebooks, addEbook, deleteEbook, getEbookById, loading, toggleFavorite };
 }
+
+    
