@@ -32,7 +32,7 @@ const getDb = () => {
   }
   if (!dbPromise) {
     dbPromise = openDB<EbookDB>(DB_NAME, DB_VERSION, {
-      upgrade(db, oldVersion) {
+      upgrade(db, oldVersion, newVersion, tx) {
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           const store = db.createObjectStore(STORE_NAME, {
             keyPath: 'id',
@@ -41,7 +41,7 @@ const getDb = () => {
           store.createIndex('name', 'name');
           store.createIndex('isFavorite', 'isFavorite');
         } else {
-            const store = db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME);
+            const store = tx.objectStore(STORE_NAME);
             if (!store.indexNames.contains('isFavorite')) {
                 store.createIndex('isFavorite', 'isFavorite');
             }
