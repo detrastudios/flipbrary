@@ -1,0 +1,17 @@
+
+{
+  "name": "Flipbrary by Sahijra",
+  "short_name": "Flipbrary",
+  "description": "View and interact with your PDFs effortlessly.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
