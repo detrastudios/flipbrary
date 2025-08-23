@@ -145,7 +145,7 @@ export default function LibraryPage() {
         <div className="flex items-center gap-2">
             <Button onClick={() => setIsUploadDialogOpen(true)} >
               <Upload className="mr-2" />
-              Unggah PDF
+              PDF
             </Button>
             <Sheet>
               <SheetTrigger asChild>
@@ -161,7 +161,7 @@ export default function LibraryPage() {
                     Atur preferensi tampilan aplikasi Anda di sini.
                   </SheetDescription>
                 </SheetHeader>
-                <ScrollArea className="py-4 flex-1 -mx-6 px-4">
+                <ScrollArea className="py-4 flex-1 -mx-6 px-6">
                   <SettingsPanel />
                 </ScrollArea>
               </SheetContent>
@@ -258,7 +258,7 @@ export default function LibraryPage() {
             <p className="text-muted-foreground mt-2">Unggah ebook PDF pertama Anda untuk memulai.</p>
              <Button className="mt-4" onClick={() => setIsUploadDialogOpen(true)}>
                 <Upload className="mr-2" />
-                Unggah PDF
+                PDF
             </Button>
           </div>
         )}
