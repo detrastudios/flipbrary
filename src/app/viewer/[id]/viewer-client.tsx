@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
-import PdfMagnifier from "@/components/pdf-magnifier";
 
 const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
   ssr: false,
@@ -39,8 +38,6 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [isMagnifierEnabled, setIsMagnifierEnabled] = useState(false);
-  const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
-  const [pageRef, setPageRef] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -115,41 +112,17 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const handleZoomChange = (value: number[]) => {
     setZoomLevel(value[0]);
   };
-  
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!pageRef) return;
-    const rect = pageRef.getBoundingClientRect();
-    setMousePosition({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
-  };
-
-  const handleMouseLeave = () => {
-    setMousePosition(null);
-  };
-
 
   return (
     <div className="h-[calc(100vh-57px)] w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
-       <div className="flex-1 relative flex items-center justify-center overflow-hidden" 
-         onMouseMove={isMagnifierEnabled ? handleMouseMove : undefined}
-         onMouseLeave={isMagnifierEnabled ? handleMouseLeave : undefined}
-       >
+       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
          <PdfViewer
              pdfUri={pdfDataUri}
              setTotalPages={setTotalPages}
              setApi={setCarouselApi}
              zoomLevel={zoomLevel}
              isMagnifierEnabled={isMagnifierEnabled}
-             setPageRef={setPageRef}
          />
-         {isMagnifierEnabled && pageRef && mousePosition && (
-            <PdfMagnifier
-              targetRef={pageRef}
-              mousePosition={mousePosition}
-            />
-          )}
        </div>
 
        <footer className="flex items-center justify-center p-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">

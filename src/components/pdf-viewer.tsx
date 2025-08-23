@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
@@ -9,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from './ui/skeleton';
+import PdfMagnifier from './pdf-magnifier';
 
 // Mengatur workerSrc untuk react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -19,7 +21,6 @@ type PdfViewerProps = {
   setApi?: (api: CarouselApi) => void;
   zoomLevel: number;
   isMagnifierEnabled: boolean;
-  setPageRef: (ref: HTMLDivElement | null) => void;
 };
 
 export default function PdfViewer({
@@ -28,13 +29,15 @@ export default function PdfViewer({
   setApi,
   zoomLevel,
   isMagnifierEnabled,
-  setPageRef,
 }: PdfViewerProps) {
   const { toast } = useToast();
   const [numPages, setNumPages] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
-  const pageContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
+  const [pageContainerRef, setPageContainerRef] = useState<HTMLDivElement | null>(null);
+
 
   const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: PDFDocumentProxy): void => {
     setNumPages(nextNumPages);
@@ -54,11 +57,8 @@ export default function PdfViewer({
   }
   
   const onPageRenderSuccess = useCallback((page: PDFPageProxy) => {
-    // Pass the ref of the div containing the rendered page
-    if(pageContainerRef.current) {
-        setPageRef(pageContainerRef.current?.querySelector('.react-pdf__Page') as HTMLDivElement);
-    }
-  }, [setPageRef]);
+    // This is now handled by the ref on the div wrapper
+  }, []);
 
   const onPageRenderError = (error: Error) => {
     if (error.name === 'AbortException') return;
@@ -69,7 +69,6 @@ export default function PdfViewer({
     });
     console.error("Error rendering page:", error);
   };
-
 
   useEffect(() => {
     const handleResize = () => {
@@ -85,6 +84,19 @@ export default function PdfViewer({
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePosition({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setMousePosition(null);
+  };
+
 
   return (
     <div ref={containerRef} className="h-full w-full flex items-center justify-center">
@@ -108,16 +120,30 @@ export default function PdfViewer({
                 <CarouselContent className="h-full">
                     {Array.from(new Array(numPages), (el, index) => (
                         <CarouselItem key={`page_${index + 1}`} className="h-full flex justify-center items-start overflow-auto">
-                            <div ref={pageContainerRef} className="p-4" style={{ cursor: isMagnifierEnabled ? 'none' : 'default' }}> 
+                            <div 
+                                ref={setPageContainerRef}
+                                className="p-4 relative" 
+                                style={{ cursor: isMagnifierEnabled ? 'none' : 'default' }}
+                                onMouseMove={isMagnifierEnabled ? handleMouseMove : undefined}
+                                onMouseLeave={isMagnifierEnabled ? handleMouseLeave : undefined}
+                            > 
                                 <Page
                                     pageNumber={index + 1}
                                     renderTextLayer={true}
                                     renderAnnotationLayer={false}
                                     className="shadow-lg mx-auto"
-                                    width={(containerWidth > 0 ? (containerWidth - 32) : containerWidth) * zoomLevel}
+                                    width={(containerWidth > 0 ? (containerWidth - 32) : containerWidth)}
+                                    scale={zoomLevel}
                                     onRenderError={onPageRenderError}
                                     onRenderSuccess={onPageRenderSuccess}
                                 />
+                                {isMagnifierEnabled && pageContainerRef && mousePosition && (
+                                  <PdfMagnifier
+                                    targetRef={pageContainerRef}
+                                    mousePosition={mousePosition}
+                                    zoomLevel={zoomLevel}
+                                  />
+                                )}
                             </div>
                         </CarouselItem>
                     ))}

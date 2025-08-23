@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useEffect, useState } from 'react';
@@ -5,6 +6,7 @@ import React, { useRef, useEffect, useState } from 'react';
 interface PdfMagnifierProps {
   targetRef: HTMLDivElement | null;
   mousePosition: { x: number; y: number } | null;
+  zoomLevel: number;
   magnification?: number;
   size?: number;
 }
@@ -12,6 +14,7 @@ interface PdfMagnifierProps {
 const PdfMagnifier: React.FC<PdfMagnifierProps> = ({
   targetRef,
   mousePosition,
+  zoomLevel,
   magnification = 2,
   size = 150,
 }) => {
@@ -27,24 +30,27 @@ const PdfMagnifier: React.FC<PdfMagnifierProps> = ({
     if (!magCtx) return;
 
     const { x, y } = mousePosition;
-    const { width, height } = sourceCanvas;
+    
+    // Adjust mouse position based on zoomLevel to get coordinates on the source canvas
+    const sourceX = x / zoomLevel;
+    const sourceY = y / zoomLevel;
 
     magCtx.clearRect(0, 0, size, size);
     
     // Draw the magnified image
     magCtx.drawImage(
       sourceCanvas,
-      x - size / (2 * magnification), // source x
-      y - size / (2 * magnification), // source y
-      size / magnification, // source width
-      size / magnification, // source height
+      sourceX - size / (2 * magnification * zoomLevel), // source x
+      sourceY - size / (2 * magnification * zoomLevel), // source y
+      size / (magnification * zoomLevel), // source width
+      size / (magnification * zoomLevel), // source height
       0, // destination x
       0, // destination y
       size, // destination width
       size // destination height
     );
 
-  }, [targetRef, mousePosition, magnification, size]);
+  }, [targetRef, mousePosition, magnification, size, zoomLevel]);
 
   if (!mousePosition) return null;
 
