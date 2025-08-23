@@ -1,240 +1,27 @@
 
-"use client";
-
-import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Button } from "@/components/ui/button";
-import { Upload, BookOpen, Trash2, LoaderCircle, BookMarked, Star } from "lucide-react";
-import Link from "next/link";
-import { useToast } from "@/hooks/use-toast";
-import { useIndexedDB, Ebook } from "@/hooks/use-indexed-db";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Image from "next/image";
+import { Suspense } from 'react';
+import LibraryClient from '@/components/library-client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function LibraryPage() {
-  const { toast } = useToast();
-  const { ebooks, addEbook, deleteEbook, loading, toggleFavorite } = useIndexedDB();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [newEbookName, setNewEbookName] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  return (
+    <Suspense fallback={<LibrarySkeleton />}>
+      <LibraryClient />
+    </Suspense>
+  );
+}
 
-  useEffect(() => {
-    if (searchParams.get('upload') === 'true') {
-      setIsUploadDialogOpen(true);
-    }
-  }, [searchParams]);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.type !== "application/pdf") {
-        setFileError("Silakan unggah file PDF yang valid.");
-        setSelectedFile(null);
-      } else {
-        setFileError(null);
-        setSelectedFile(file);
-        if (!newEbookName) {
-            setNewEbookName(file.name.replace(/\.pdf$/i, ''));
-        }
-      }
-    }
-  };
-
-  const handleUploadSubmit = async () => {
-    if (!selectedFile) {
-        setFileError("Silakan pilih file PDF untuk diunggah.");
-        return;
-    }
-    if (!newEbookName.trim()) {
-        toast({
-            variant: "destructive",
-            title: "Nama Ebook Diperlukan",
-            description: "Silakan masukkan nama untuk ebook Anda.",
-        });
-        return;
-    }
-
-    setIsUploading(true);
-
-    try {
-        const newEbook: Omit<Ebook, 'id' | 'thumbnailUrl' | 'isFavorite'> = {
-            name: newEbookName.trim(),
-            data: selectedFile,
-        };
-        await addEbook(newEbook);
-        toast({
-            title: "Unggah Berhasil",
-            description: `"${newEbook.name}" telah ditambahkan ke library Anda.`,
-        });
-        resetUploadForm();
-    } catch (error) {
-        console.error("Gagal menyimpan ebook atau membuat thumbnail", error);
-        toast({
-            variant: "destructive",
-            title: "Gagal Menyimpan Ebook",
-            description: "Terjadi kesalahan saat memproses atau menyimpan ebook Anda.",
-        });
-    } finally {
-        setIsUploading(false);
-    }
-  };
-  
-  const resetUploadForm = () => {
-    setIsUploadDialogOpen(false);
-    setNewEbookName("");
-    setSelectedFile(null);
-    setFileError(null);
-    // Hapus query param dari URL saat dialog ditutup
-    router.push('/', { scroll: false });
-  };
-
-  const handleDelete = async (idToDelete: number) => {
-    try {
-      await deleteEbook(idToDelete);
-      toast({
-        title: "Ebook Dihapus",
-        description: "Ebook telah dihapus dari library Anda.",
-      });
-    } catch (error) {
-      console.error("Gagal menghapus ebook dari IndexedDB", error);
-      toast({
-        variant: "destructive",
-        title: "Gagal Menghapus Ebook",
-        description: "Tidak dapat menghapus ebook dari library Anda.",
-      });
-    }
-  };
-  
-  const handleToggleFavorite = async (event: React.MouseEvent, ebook: Ebook) => {
-    event.preventDefault();
-    event.stopPropagation();
-    try {
-      await toggleFavorite(ebook.id, !ebook.isFavorite);
-      toast({
-        title: ebook.isFavorite ? "Dihapus dari favorit" : "Ditambahkan ke favorit",
-        description: `"${ebook.name}" telah diperbarui.`,
-      });
-    } catch (error) {
-      console.error("Gagal mengubah status favorit", error);
-      toast({
-        variant: "destructive",
-        title: "Gagal Memperbarui Favorit",
-        description: "Tidak dapat mengubah status favorit ebook.",
-      });
-    }
-  };
-
-  if (loading) {
+function LibrarySkeleton() {
     return (
-        <div className="flex items-center justify-center min-h-screen">
-            <p>Memuat library Anda...</p>
+        <div className="p-4 md:p-8">
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex flex-col items-center gap-2">
+                        <Skeleton className="aspect-[2/3] w-full rounded-lg" />
+                        <Skeleton className="h-4 w-3/4 rounded-md" />
+                    </div>
+                ))}
+            </div>
         </div>
     )
-  }
-
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Dialog open={isUploadDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) resetUploadForm(); else setIsUploadDialogOpen(true); }}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Unggah Ebook Baru</DialogTitle>
-            <DialogDescription>
-              Pilih file PDF dan berikan nama untuk menambahkannya ke library Anda.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="ebook-name">
-                Nama Ebook
-              </Label>
-              <Input
-                id="ebook-name"
-                value={newEbookName}
-                onChange={(e) => setNewEbookName(e.target.value)}
-                placeholder="Contoh: Novel Sejarah"
-                disabled={isUploading}
-              />
-            </div>
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="pdf-upload">
-                File PDF
-              </Label>
-               <Input id="pdf-upload" type="file" onChange={handleFileChange} accept=".pdf" disabled={isUploading}/>
-            </div>
-             {fileError && <p className="text-sm text-red-500">{fileError}</p>}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={resetUploadForm} disabled={isUploading}>Batal</Button>
-            <Button onClick={handleUploadSubmit} disabled={!selectedFile || !newEbookName || isUploading}>
-                {isUploading && <LoaderCircle className="mr-2 animate-spin" />}
-                {isUploading ? "Mengunggah..." : "Simpan & Unggah"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <div className="p-4 md:p-8">
-        {ebooks.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ebooks.map((ebook) => (
-              <div key={ebook.id} className="group relative transition-all duration-300 hover:scale-105 hover:shadow-2xl rounded-lg">
-                <Link href={`/viewer/${ebook.id}`} className="block text-center">
-                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center p-1 shadow-md transition-all duration-300 group-hover:shadow-xl overflow-hidden">
-                    {ebook.thumbnailUrl ? (
-                      <Image 
-                        src={ebook.thumbnailUrl} 
-                        alt={`Cover of ${ebook.name}`} 
-                        width={200}
-                        height={300}
-                        className="object-cover w-full h-full rounded-md"
-                      />
-                    ) : (
-                      <BookOpen className="w-12 h-12 text-muted-foreground" />
-                    )}
-                  </div>
-                  <p className="mt-2 text-sm font-medium truncate px-1" title={ebook.name}>
-                    {ebook.name}
-                  </p>
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute -top-3 -left-3 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-yellow-400 hover:text-yellow-300"
-                  onClick={(e) => handleToggleFavorite(e, ebook)}
-                  aria-label="Favoritkan Ebook"
-                >
-                  <Star className={ebook.isFavorite ? "fill-current" : ""} />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="absolute -top-3 -right-3 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleDelete(ebook.id)}
-                  aria-label="Hapus Ebook"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 border-2 border-dashed rounded-lg">
-            <h2 className="text-2xl font-semibold">Library Anda kosong</h2>
-            <p className="text-muted-foreground mt-2">Unggah ebook PDF pertama Anda untuk memulai.</p>
-             <Button className="mt-4" onClick={() => setIsUploadDialogOpen(true)}>
-                <Upload className="mr-2" />
-                PDF
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 }
