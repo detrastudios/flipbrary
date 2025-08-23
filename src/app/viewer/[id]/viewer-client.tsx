@@ -10,6 +10,7 @@ import { useIndexedDB } from "@/hooks/use-indexed-db";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 
 const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
   ssr: false,
@@ -106,12 +107,8 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     }
   };
 
-  const handleZoomIn = () => {
-    setZoomLevel(prevZoom => Math.min(prevZoom + 0.2, 2.5));
-  };
-
-  const handleZoomOut = () => {
-    setZoomLevel(prevZoom => Math.max(prevZoom - 0.2, 0.5));
+  const handleZoomChange = (value: number[]) => {
+    setZoomLevel(value[0]);
   };
 
 
@@ -128,16 +125,18 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
 
        <footer className="flex items-center justify-center p-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={handleZoomOut} disabled={zoomLevel <= 0.5}>
-                        <ZoomOut />
-                        <span className="sr-only">Perkecil</span>
-                    </Button>
-                    <span className="text-sm font-medium w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
-                    <Button variant="outline" size="icon" onClick={handleZoomIn} disabled={zoomLevel >= 2.5}>
-                        <ZoomIn />
-                        <span className="sr-only">Perbesar</span>
-                    </Button>
+                <div className="flex items-center gap-2 w-48">
+                    <ZoomOut className="text-muted-foreground" />
+                    <Slider
+                        value={[zoomLevel]}
+                        min={0.2}
+                        max={2}
+                        step={0.1}
+                        onValueChange={handleZoomChange}
+                        className="w-full"
+                    />
+                    <ZoomIn className="text-muted-foreground" />
+                    <span className="text-sm font-medium w-16 text-center">{Math.round(zoomLevel * 100)}%</span>
                 </div>
                <div className="flex items-center gap-2">
                    <Button variant="outline" size="icon" onClick={handlePrevPage} disabled={!carouselApi?.canScrollPrev()}>
