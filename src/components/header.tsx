@@ -2,17 +2,15 @@
 "use client";
 
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
 import Link from 'next/link';
 import { BookMarked, Settings, Upload, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import SettingsPanel from "@/components/settings-panel";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Header() {
   const pathname = usePathname();
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
   const isViewerPage = pathname.startsWith('/viewer/');
 
@@ -65,12 +63,12 @@ export default function Header() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/?upload=true">
-              <Button>
+            <Button asChild>
+              <Link href="/?upload=true">
                 <Upload className="mr-2" />
                 PDF
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             {renderSettings()}
           </div>
         </>

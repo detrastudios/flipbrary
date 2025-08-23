@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Upload, BookOpen, Trash2, LoaderCircle, BookMarked, Star } from "lucide-react";
 import Link from "next/link";
@@ -15,12 +16,20 @@ import Image from "next/image";
 export default function LibraryPage() {
   const { toast } = useToast();
   const { ebooks, addEbook, deleteEbook, loading, toggleFavorite } = useIndexedDB();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [newEbookName, setNewEbookName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('upload') === 'true') {
+      setIsUploadDialogOpen(true);
+    }
+  }, [searchParams]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -82,6 +91,8 @@ export default function LibraryPage() {
     setNewEbookName("");
     setSelectedFile(null);
     setFileError(null);
+    // Hapus query param dari URL saat dialog ditutup
+    router.push('/', { scroll: false });
   };
 
   const handleDelete = async (idToDelete: number) => {

@@ -76,7 +76,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     };
 
     carouselApi.on("select", onSelect);
-    onSelect(); // Panggil sekali untuk inisialisasi
+    onSelect(); 
 
     return () => {
       carouselApi.off("select", onSelect);
@@ -102,7 +102,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
         title: "Halaman Tidak Valid",
         description: `Silakan masukkan nomor antara 1 dan ${totalPages}.`,
       });
-      // Reset input ke halaman saat ini jika tidak valid
+      
       setPageInput(String(currentPage));
     }
   };
