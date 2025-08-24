@@ -1,17 +1,16 @@
 
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { FileQuestion } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
+import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from './ui/skeleton';
 import PdfMagnifier from './pdf-magnifier';
-import { cn } from '@/lib/utils';
 
 // Mengatur workerSrc untuk react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -33,10 +32,12 @@ export default function PdfViewer({
 }: PdfViewerProps) {
   const { toast } = useToast();
   const [numPages, setNumPages] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-
+  
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
   const [pageContainerRef, setPageContainerRef] = useState<HTMLDivElement | null>(null);
+
+  const [isPanning, setIsPanning] = useState(false);
+  const [startCoords, setStartCoords] = useState({ x: 0, y: 0 });
   
   const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: PDFDocumentProxy): void => {
     setNumPages(nextNumPages);
@@ -44,9 +45,7 @@ export default function PdfViewer({
   }, [setTotalPagesProp]);
 
   function onDocumentLoadError(error: Error) {
-    if (error.name === 'AbortException') {
-      return;
-    }
+    if (error.name === 'AbortException') return;
     toast({
       variant: "destructive",
       title: "Gagal memuat PDF",
@@ -55,12 +54,8 @@ export default function PdfViewer({
     console.error("Error loading PDF:", error);
   }
   
-  const onPageRenderSuccess = useCallback((page: PDFPageProxy) => {
-    // This is now handled by the ref on the div wrapper
-  }, []);
-
   const onPageRenderError = (error: Error) => {
-    if (error.name === 'AbortException') return; // Suppress AbortException warning
+    if (error.name === 'AbortException') return;
     toast({
         variant: "destructive",
         title: "Gagal merender halaman",
@@ -69,31 +64,71 @@ export default function PdfViewer({
     console.error("Error rendering page:", error);
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isMagnifierEnabled) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const pageDiv = e.currentTarget.firstChild as HTMLDivElement;
-      if (pageDiv) {
-        const pageRect = pageDiv.getBoundingClientRect();
-         setMousePosition({
-           x: e.clientX - pageRect.left,
-           y: e.clientY - pageRect.top,
-         });
-      }
+  const handleMagnifierMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isMagnifierEnabled) return;
+    const pageDiv = e.currentTarget.firstChild as HTMLDivElement;
+    if (pageDiv) {
+      const pageRect = pageDiv.getBoundingClientRect();
+       setMousePosition({
+         x: e.clientX - pageRect.left,
+         y: e.clientY - pageRect.top,
+       });
     }
   };
 
-  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMagnifierMouseLeave = () => {
     setMousePosition(null);
   };
 
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (zoomLevel <= 1 || isMagnifierEnabled) return;
+    setIsPanning(true);
+    setStartCoords({
+      x: e.pageX - e.currentTarget.offsetLeft,
+      y: e.pageY - e.currentTarget.offsetTop,
+    });
+    e.currentTarget.style.cursor = 'grabbing';
+  };
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (zoomLevel <= 1 || isMagnifierEnabled) return;
+    setIsPanning(false);
+    e.currentTarget.style.cursor = 'grab';
+  };
+  
+  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+     if (zoomLevel <= 1 || isMagnifierEnabled) return;
+     if (isPanning) {
+        setIsPanning(false);
+        e.currentTarget.style.cursor = 'grab';
+     }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isMagnifierEnabled) {
+      handleMagnifierMouseMove(e);
+      return;
+    }
+    if (!isPanning || zoomLevel <= 1) return;
+    e.preventDefault();
+    const x = e.pageX - e.currentTarget.offsetLeft;
+    const y = e.pageY - e.currentTarget.offsetTop;
+    const walkX = (x - startCoords.x) * 1.5; // scroll faster
+    const walkY = (y - startCoords.y) * 1.5;
+    e.currentTarget.scrollLeft -= walkX;
+    e.currentTarget.scrollTop -= walkY;
+    setStartCoords({ x, y }); // update start coords for next move
+  };
+
+
   const getCursorStyle = () => {
     if (isMagnifierEnabled) return 'none';
+    if (zoomLevel > 1) return 'grab';
     return 'default';
   };
 
   return (
-    <div ref={containerRef} className="h-full w-full flex items-center justify-center">
+    <div className="h-full w-full flex items-center justify-center">
       {pdfUri ? (
         <Document
             file={pdfUri}
@@ -109,20 +144,23 @@ export default function PdfViewer({
                     Gagal memuat file PDF.
                 </div>
             }
+            onRenderError={onPageRenderError}
         >
             <Carousel setApi={setApi} className="w-full h-full">
                 <CarouselContent className="h-full">
                     {Array.from(new Array(numPages), (el, index) => (
                         <CarouselItem key={`page_${index + 1}`} className="h-full w-full">
                             <div 
-                                className="w-full h-full overflow-auto"
+                                className="w-full h-full overflow-auto flex items-center justify-center"
                                 style={{ cursor: getCursorStyle() }}
-                                onMouseMove={handleMouseMove}
+                                onMouseDown={handleMouseDown}
+                                onMouseUp={handleMouseUp}
                                 onMouseLeave={handleMouseLeave}
+                                onMouseMove={handleMouseMove}
                             > 
                                 <div 
                                   ref={setPageContainerRef}
-                                  className="relative p-4 flex items-center justify-center h-full"
+                                  className="relative p-4 flex items-center justify-center"
                                 >
                                   <div
                                     style={{
@@ -137,7 +175,6 @@ export default function PdfViewer({
                                         renderAnnotationLayer={false}
                                         className="shadow-lg"
                                         onRenderError={onPageRenderError}
-                                        onRenderSuccess={onPageRenderSuccess}
                                     />
                                   </div>
                                     {isMagnifierEnabled && pageContainerRef && mousePosition && (
