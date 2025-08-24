@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ type ViewerPageProps = {
 export default function ViewerPageClient({ id }: ViewerPageProps) {
   const { toast } = useToast();
   const { getEbookById } = useIndexedDB();
+  const viewerContainerRef = useRef<HTMLDivElement>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageInput, setPageInput] = useState("1");
@@ -38,6 +39,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [isMagnifierEnabled, setIsMagnifierEnabled] = useState(false);
+  const [initialZoomCalculated, setInitialZoomCalculated] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -84,6 +86,24 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
       carouselApi.off("select", onSelect);
     };
   }, [carouselApi]);
+  
+  const handleDimensionsReady = useCallback((pageDimensions: { width: number; height: number }) => {
+    if (initialZoomCalculated || !viewerContainerRef.current) return;
+    
+    const container = viewerContainerRef.current;
+    const padding = 32; // Corresponds to p-4, 1rem = 16px. 2 * 16 = 32
+    const containerWidth = container.clientWidth - padding;
+    const containerHeight = container.clientHeight - padding;
+    
+    const widthScale = containerWidth / pageDimensions.width;
+    const heightScale = containerHeight / pageDimensions.height;
+    
+    const newZoom = Math.min(widthScale, heightScale);
+    
+    setZoomLevel(newZoom);
+    setInitialZoomCalculated(true);
+  }, [initialZoomCalculated]);
+
 
   const handleNextPage = useCallback(() => {
     carouselApi?.scrollNext();
@@ -115,13 +135,14 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
 
   return (
     <div className="h-[calc(100vh-57px)] w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
-       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+       <div ref={viewerContainerRef} className="flex-1 relative flex items-center justify-center overflow-hidden">
          <PdfViewer
              pdfUri={pdfDataUri}
              setTotalPages={setTotalPages}
              setApi={setCarouselApi}
              zoomLevel={zoomLevel}
              isMagnifierEnabled={isMagnifierEnabled}
+             onDimensionsReady={handleDimensionsReady}
          />
        </div>
 

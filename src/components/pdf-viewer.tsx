@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -32,6 +33,7 @@ type PdfViewerProps = {
   setApi?: (api: CarouselApi) => void;
   zoomLevel: number;
   isMagnifierEnabled: boolean;
+  onDimensionsReady?: (dimensions: { width: number; height: number }) => void;
 };
 
 export default function PdfViewer({
@@ -40,12 +42,12 @@ export default function PdfViewer({
   setApi,
   zoomLevel,
   isMagnifierEnabled,
+  onDimensionsReady,
 }: PdfViewerProps) {
   const { toast } = useToast();
   const [numPages, setNumPages] = useState(0);
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
   const pageContainerRef = useRef<HTMLDivElement | null>(null);
-  const [pageDimensions, setPageDimensions] = useState<{ width: number; height: number } | null>(null);
 
   const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: PDFDocumentProxy): void => {
     setNumPages(nextNumPages);
@@ -53,12 +55,11 @@ export default function PdfViewer({
   }, [setTotalPagesProp]);
 
   const onPageLoadSuccess = useCallback((page: PDFPageProxy) => {
-    // Only set dimensions if they haven't been set yet
-    if (!pageDimensions) {
+    if (onDimensionsReady) {
       const viewport = page.getViewport({ scale: 1 });
-      setPageDimensions({ width: viewport.width, height: viewport.height });
+      onDimensionsReady({ width: viewport.width, height: viewport.height });
     }
-  }, [pageDimensions]);
+  }, [onDimensionsReady]);
 
   function onDocumentLoadError(error: Error) {
     if (error.name === 'AbortException') return; // Ignore abort errors
@@ -102,7 +103,11 @@ export default function PdfViewer({
     <>
       <style>{SCROLLBAR_STYLES}</style>
       <div 
-        className="h-full w-full overflow-auto hide-scrollbar"
+        className={cn(
+          "h-full w-full overflow-auto hide-scrollbar",
+           zoomLevel > 1 && "cursor-grab",
+           "flex items-start justify-center" // Selalu mulai dari atas
+        )}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setMousePosition(null)}
       >
@@ -122,40 +127,30 @@ export default function PdfViewer({
             <Carousel setApi={setApi} className="w-full h-full">
               <CarouselContent className="h-full">
                 {Array.from(new Array(numPages), (el, index) => (
-                  <CarouselItem key={`page_${index + 1}`} className="h-full w-full">
+                  <CarouselItem key={`page_${index + 1}`} className="flex items-center justify-center">
                     <div
-                      className={cn(
-                        "w-full h-full p-4 flex items-center justify-center"
-                      )}
+                      ref={pageContainerRef}
+                      className="relative"
                       style={{ cursor: isMagnifierEnabled ? 'none' : 'default' }}
                     >
-                      <div
-                        ref={pageContainerRef}
-                        className="relative"
-                        style={{
-                           width: pageDimensions ? `${pageDimensions.width * zoomLevel}px` : 'auto',
-                           height: pageDimensions ? `${pageDimensions.height * zoomLevel}px` : 'auto',
-                        }}
-                      >
-                        <Page
-                          pageNumber={index + 1}
-                          renderTextLayer={{
-                                onRenderError: onTextLayerRenderError,
-                            }}
-                          renderAnnotationLayer={false}
-                          className="shadow-lg"
-                          onRenderError={onPageRenderError}
-                          onLoadSuccess={onPageLoadSuccess}
-                          scale={zoomLevel}
+                      <Page
+                        pageNumber={index + 1}
+                        renderTextLayer={{
+                              onRenderError: onTextLayerRenderError,
+                          }}
+                        renderAnnotationLayer={false}
+                        className="shadow-lg"
+                        onRenderError={onPageRenderError}
+                        onLoadSuccess={onPageLoadSuccess}
+                        scale={zoomLevel}
+                      />
+                      {isMagnifierEnabled && pageContainerRef.current && mousePosition && (
+                        <PdfMagnifier
+                          targetRef={pageContainerRef.current}
+                          mousePosition={mousePosition}
+                          zoomLevel={zoomLevel}
                         />
-                        {isMagnifierEnabled && pageContainerRef.current && mousePosition && (
-                          <PdfMagnifier
-                            targetRef={pageContainerRef.current}
-                            mousePosition={mousePosition}
-                            zoomLevel={zoomLevel}
-                          />
-                        )}
-                      </div>
+                      )}
                     </div>
                   </CarouselItem>
                 ))}
