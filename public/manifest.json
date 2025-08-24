@@ -1,18 +1,16 @@
-
 {
-  "name": "Flipbrary",
+  "name": "Flipbrary by Sahijra",
   "short_name": "Flipbrary",
   "description": "View and interact with your PDFs effortlessly.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "/icon.svg",
-      "sizes": "48x48 72x72 96x96 128x128 256x256 512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }
