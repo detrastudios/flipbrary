@@ -35,7 +35,6 @@ export default function PdfViewer({
   const [numPages, setNumPages] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
-  const pageWrapperRef = useRef<HTMLDivElement>(null);
 
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
   const [pageContainerRef, setPageContainerRef] = useState<HTMLDivElement | null>(null);
@@ -91,19 +90,23 @@ export default function PdfViewer({
   }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    if (isPanning && e.currentTarget.parentElement) {
+    if (isPanning) {
       e.preventDefault();
       const dx = e.clientX - startCoords.x;
       const dy = e.clientY - startCoords.y;
-      e.currentTarget.parentElement.scrollLeft -= dx;
-      e.currentTarget.parentElement.scrollTop -= dy;
+      e.currentTarget.scrollLeft -= dx;
+      e.currentTarget.scrollTop -= dy;
       setStartCoords({ x: e.clientX, y: e.clientY });
     } else if (isMagnifierEnabled) {
-       setMousePosition({
-         x: e.clientX - rect.left,
-         y: e.clientY - rect.top,
-       });
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pageDiv = e.currentTarget.firstChild as HTMLDivElement;
+      if (pageDiv) {
+        const pageRect = pageDiv.getBoundingClientRect();
+         setMousePosition({
+           x: e.clientX - pageRect.left,
+           y: e.clientY - pageRect.top,
+         });
+      }
     }
   };
 
@@ -152,33 +155,40 @@ export default function PdfViewer({
             <Carousel setApi={setApi} className="w-full h-full">
                 <CarouselContent className="h-full">
                     {Array.from(new Array(numPages), (el, index) => (
-                        <CarouselItem key={`page_${index + 1}`} className="h-full flex justify-center items-start overflow-auto">
+                        <CarouselItem key={`page_${index + 1}`} className="h-full w-full">
                             <div 
-                                ref={setPageContainerRef}
-                                className="p-4 relative" 
+                                className="w-full h-full overflow-auto"
                                 style={{ cursor: getCursorStyle() }}
                                 onMouseMove={handleMouseMove}
                                 onMouseLeave={handleMouseLeave}
                                 onMouseDown={handleMouseDown}
                                 onMouseUp={handleMouseUp}
                             > 
-                                <Page
-                                    pageNumber={index + 1}
-                                    renderTextLayer={true}
-                                    renderAnnotationLayer={false}
-                                    className="shadow-lg mx-auto"
-                                    width={(containerWidth > 0 ? (containerWidth - 32) : containerWidth)}
-                                    scale={zoomLevel}
-                                    onRenderError={onPageRenderError}
-                                    onRenderSuccess={onPageRenderSuccess}
-                                />
-                                {isMagnifierEnabled && pageContainerRef && mousePosition && (
-                                  <PdfMagnifier
-                                    targetRef={pageContainerRef}
-                                    mousePosition={mousePosition}
-                                    zoomLevel={zoomLevel}
-                                  />
-                                )}
+                                <div 
+                                  ref={setPageContainerRef}
+                                  className="relative p-4 flex items-center justify-center"
+                                  style={{
+                                      width: zoomLevel > 1 ? `${(containerWidth-32) * zoomLevel}px` : '100%',
+                                      height: zoomLevel > 1 ? 'auto' : '100%'
+                                  }}
+                                >
+                                    <Page
+                                        pageNumber={index + 1}
+                                        renderTextLayer={true}
+                                        renderAnnotationLayer={false}
+                                        className="shadow-lg mx-auto"
+                                        scale={zoomLevel}
+                                        onRenderError={onPageRenderError}
+                                        onRenderSuccess={onPageRenderSuccess}
+                                    />
+                                    {isMagnifierEnabled && pageContainerRef && mousePosition && (
+                                      <PdfMagnifier
+                                        targetRef={pageContainerRef}
+                                        mousePosition={mousePosition}
+                                        zoomLevel={zoomLevel}
+                                      />
+                                    )}
+                                </div>
                             </div>
                         </CarouselItem>
                     ))}
