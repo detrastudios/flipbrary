@@ -1,13 +1,13 @@
 
 "use client";
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { FileQuestion } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { PDFDocumentProxy } from 'pdfjs-dist';
+import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from './ui/skeleton';
 import PdfMagnifier from './pdf-magnifier';
@@ -39,12 +39,20 @@ export default function PdfViewer({
 
   const [isPanning, setIsPanning] = useState(false);
   const [startCoords, setStartCoords] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+  const [pageDimensions, setPageDimensions] = useState<{ width: number; height: number } | null>(null);
 
 
   const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: PDFDocumentProxy): void => {
     setNumPages(nextNumPages);
     setTotalPagesProp(nextNumPages);
   }, [setTotalPagesProp]);
+
+  const onPageLoadSuccess = (page: PDFPageProxy) => {
+    if (!pageDimensions) {
+      const viewport = page.getViewport({ scale: 1 });
+      setPageDimensions({ width: viewport.width, height: viewport.height });
+    }
+  };
 
   function onDocumentLoadError(error: Error) {
     if (error.name === 'AbortException') return;
@@ -68,6 +76,7 @@ export default function PdfViewer({
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (zoomLevel <= 1 || isMagnifierEnabled) return;
+    e.preventDefault(); // Prevent text selection
     setIsPanning(true);
     const target = e.currentTarget;
     setStartCoords({
@@ -103,15 +112,12 @@ export default function PdfViewer({
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isMagnifierEnabled) {
-      const pageDiv = pageContainerRef;
-      if (pageDiv) {
-        const pageRect = pageDiv.getBoundingClientRect();
+    if (isMagnifierEnabled && pageContainerRef) {
+        const pageRect = pageContainerRef.getBoundingClientRect();
         setMousePosition({
           x: e.clientX - pageRect.left,
           y: e.clientY - pageRect.top,
         });
-      }
     }
 
     if (!isPanning) return;
@@ -155,36 +161,45 @@ export default function PdfViewer({
                     {Array.from(new Array(numPages), (el, index) => (
                         <CarouselItem key={`page_${index + 1}`} className="h-full w-full">
                             <div 
-                                className="w-full h-full overflow-auto flex items-center justify-center"
+                                className="w-full h-full overflow-auto"
                                 onMouseDown={handleMouseDown}
                                 onMouseUp={handleMouseUp}
                                 onMouseMove={handleMouseMove}
                                 onMouseLeave={handleMouseLeave}
                                 style={{ cursor: getCursorStyle() }}
                             > 
-                                <div 
-                                  ref={setPageContainerRef}
-                                  className="relative flex justify-center"
+                                <div
                                   style={{
-                                    transform: `scale(${zoomLevel})`,
-                                    transformOrigin: 'center',
-                                    transition: 'transform 0.2s ease-out',
+                                    height: pageDimensions ? `${pageDimensions.height * zoomLevel}px` : '100%',
+                                    width: pageDimensions ? `${pageDimensions.width * zoomLevel}px` : '100%',
+                                    margin: 'auto'
                                   }}
+                                  className="flex items-center justify-center"
                                 >
-                                    <Page
-                                        pageNumber={index + 1}
-                                        renderTextLayer={true}
-                                        renderAnnotationLayer={false}
-                                        className="shadow-lg"
-                                        onRenderError={onPageRenderError}
-                                    />
-                                    {isMagnifierEnabled && pageContainerRef && mousePosition && (
-                                      <PdfMagnifier
-                                        targetRef={pageContainerRef}
-                                        mousePosition={mousePosition}
-                                        zoomLevel={zoomLevel}
+                                  <div 
+                                    ref={setPageContainerRef}
+                                    className="relative flex justify-center"
+                                    style={{
+                                      transform: `scale(${zoomLevel})`,
+                                      transformOrigin: 'top center',
+                                    }}
+                                  >
+                                      <Page
+                                          pageNumber={index + 1}
+                                          renderTextLayer={true}
+                                          renderAnnotationLayer={false}
+                                          className="shadow-lg"
+                                          onRenderError={onPageRenderError}
+                                          onLoadSuccess={onPageLoadSuccess}
                                       />
-                                    )}
+                                      {isMagnifierEnabled && pageContainerRef && mousePosition && (
+                                        <PdfMagnifier
+                                          targetRef={pageContainerRef}
+                                          mousePosition={mousePosition}
+                                          zoomLevel={zoomLevel}
+                                        />
+                                      )}
+                                  </div>
                                 </div>
                             </div>
                         </CarouselItem>
