@@ -160,12 +160,12 @@ export default function PdfViewer({
                             > 
                                 <div 
                                   ref={setPageContainerRef}
-                                  className="relative p-4 flex items-center justify-center"
+                                  className="relative p-4 flex justify-center"
                                 >
                                   <div
                                     style={{
                                       transform: `scale(${zoomLevel})`,
-                                      transformOrigin: 'center',
+                                      transformOrigin: 'top center',
                                       transition: 'transform 0.2s ease-out',
                                     }}
                                   >
