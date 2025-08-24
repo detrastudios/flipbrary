@@ -172,16 +172,18 @@ export default function PdfViewer({
                                   style={{
                                     height: pageDimensions ? `${pageDimensions.height * zoomLevel}px` : '100%',
                                     width: pageDimensions ? `${pageDimensions.width * zoomLevel}px` : '100%',
-                                    margin: 'auto'
+                                    margin: 'auto',
+                                    display: 'flex',
+                                    alignItems: 'center',
                                   }}
-                                  className="flex items-center justify-center"
+                                  className="justify-center"
                                 >
                                   <div 
                                     ref={setPageContainerRef}
                                     className="relative flex justify-center"
                                     style={{
                                       transform: `scale(${zoomLevel})`,
-                                      transformOrigin: 'top center',
+                                      transformOrigin: 'center',
                                     }}
                                   >
                                       <Page
