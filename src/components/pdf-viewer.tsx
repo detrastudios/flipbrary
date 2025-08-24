@@ -10,7 +10,7 @@ import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from './ui/skeleton';
 import PdfMagnifier from './pdf-magnifier';
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 // Mengatur workerSrc untuk react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -101,7 +101,11 @@ export default function PdfViewer({
   return (
     <>
       <style>{SCROLLBAR_STYLES}</style>
-      <div className="h-full w-full flex items-center justify-center">
+      <div 
+        className="h-full w-full overflow-auto hide-scrollbar"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setMousePosition(null)}
+      >
         {pdfUri ? (
           <Document
             file={pdfUri}
@@ -121,18 +125,14 @@ export default function PdfViewer({
                   <CarouselItem key={`page_${index + 1}`} className="h-full w-full">
                     <div
                       className={cn(
-                        "w-full h-full overflow-auto hide-scrollbar",
-                        zoomLevel > 1 ? "flex items-start justify-center" : "flex items-center justify-center"
+                        "w-full h-full p-4 flex items-center justify-center"
                       )}
-                      onMouseMove={handleMouseMove}
-                      onMouseLeave={() => setMousePosition(null)}
                       style={{ cursor: isMagnifierEnabled ? 'none' : 'default' }}
                     >
                       <div
                         ref={pageContainerRef}
                         className="relative"
                         style={{
-                          // This div will still grow based on zoom to trigger overflow
                            width: pageDimensions ? `${pageDimensions.width * zoomLevel}px` : 'auto',
                            height: pageDimensions ? `${pageDimensions.height * zoomLevel}px` : 'auto',
                         }}
