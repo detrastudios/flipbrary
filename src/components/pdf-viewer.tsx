@@ -152,7 +152,7 @@ export default function PdfViewer({
               {Array.from(new Array(numPages), (el, index) => (
                 <CarouselItem key={`page_${index + 1}`} className="h-full w-full">
                   <div
-                    className={cn("w-full h-full overflow-auto flex items-start justify-center", zoomLevel > 1 && "custom-scrollbar")}
+                    className={cn("w-full h-full overflow-auto", zoomLevel > 1 && "custom-scrollbar")}
                     onMouseDown={handleMouseDown}
                     onMouseUp={handleMouseUp}
                     onMouseMove={handleMouseMove}
@@ -160,29 +160,34 @@ export default function PdfViewer({
                     style={{ cursor: getCursorStyle() }}
                   >
                     <div
-                      ref={pageContainerRef}
-                      className="relative p-4" // Tambahkan padding di sini
+                      className="flex items-start justify-center p-4"
                       style={{
-                        width: pageDimensions ? `${pageDimensions.width * zoomLevel}px` : 'auto',
-                        height: pageDimensions ? `${pageDimensions.height * zoomLevel}px` : 'auto',
+                        width: pageDimensions ? `${pageDimensions.width * zoomLevel}px` : '100%',
+                        height: pageDimensions ? `${pageDimensions.height * zoomLevel}px` : '100%',
+                        margin: 'auto'
                       }}
                     >
-                      <Page
-                        pageNumber={index + 1}
-                        renderTextLayer={true}
-                        renderAnnotationLayer={false}
-                        className="shadow-lg"
-                        onRenderError={onPageRenderError}
-                        onLoadSuccess={onPageLoadSuccess}
-                        scale={zoomLevel}
-                      />
-                      {isMagnifierEnabled && pageContainerRef.current && mousePosition && (
-                        <PdfMagnifier
-                          targetRef={pageContainerRef.current}
-                          mousePosition={mousePosition}
-                          zoomLevel={zoomLevel}
-                        />
-                      )}
+                       <div
+                          ref={pageContainerRef}
+                          className="relative"
+                       >
+                          <Page
+                            pageNumber={index + 1}
+                            renderTextLayer={true}
+                            renderAnnotationLayer={false}
+                            className="shadow-lg"
+                            onRenderError={onPageRenderError}
+                            onLoadSuccess={onPageLoadSuccess}
+                            scale={zoomLevel}
+                          />
+                          {isMagnifierEnabled && pageContainerRef.current && mousePosition && (
+                            <PdfMagnifier
+                              targetRef={pageContainerRef.current}
+                              mousePosition={mousePosition}
+                              zoomLevel={zoomLevel}
+                            />
+                          )}
+                       </div>
                     </div>
                   </div>
                 </CarouselItem>
