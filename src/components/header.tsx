@@ -47,7 +47,7 @@ export default function Header() {
                 <span className="sr-only">Kembali ke Library</span>
               </Link>
             </Button>
-            <h1 className="text-lg font-semibold truncate">PDF Viewer</h1>
+            <h1 className="text-lg font-semibold truncate">Flipbrary viewer</h1>
           </div>
           <div className="flex items-center gap-2">
             {renderSettings()}
