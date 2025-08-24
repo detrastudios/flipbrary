@@ -152,7 +152,7 @@ export default function PdfViewer({
               {Array.from(new Array(numPages), (el, index) => (
                 <CarouselItem key={`page_${index + 1}`} className="h-full w-full">
                   <div
-                    className="w-full h-full overflow-auto flex items-start justify-center" // Ubah items-center menjadi items-start
+                    className={cn("w-full h-full overflow-auto flex items-start justify-center", zoomLevel > 1 && "custom-scrollbar")}
                     onMouseDown={handleMouseDown}
                     onMouseUp={handleMouseUp}
                     onMouseMove={handleMouseMove}
