@@ -133,6 +133,9 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const handleZoomChange = (value: number[]) => {
     setZoomLevel(value[0]);
   };
+
+  const handleZoomIn = () => setZoomLevel(z => Math.min(z + 0.2, 3));
+  const handleZoomOut = () => setZoomLevel(z => Math.max(z - 0.2, 0.2));
   
   const handleToggleBookmark = async () => {
     if (!ebook || !updateEbook) return;
@@ -155,7 +158,7 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
 
   return (
     <div className="h-[calc(100vh-57px)] w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
-       <div ref={viewerContainerRef} className="flex-1 relative flex items-center justify-center overflow-hidden">
+       <div ref={viewerContainerRef} className="flex-1 relative flex items-center justify-center overflow-auto p-4 custom-scrollbar">
          <PdfViewer
              pdfUri={pdfDataUri}
              setTotalPages={setTotalPages}
@@ -166,70 +169,81 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
          />
        </div>
 
-       <footer className="flex items-center justify-between p-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
-           <div className="flex items-center gap-4 w-1/3">
-                {/* Placeholder */}
-           </div>
-           <div className="flex items-center justify-center gap-4 w-1/3">
-               <div className="flex items-center gap-2">
-                   <Button variant="outline" size="icon" onClick={handlePrevPage} disabled={!carouselApi?.canScrollPrev()}>
-                       <ChevronsLeft />
-                       <span className="sr-only">Halaman Sebelumnya</span>
-                   </Button>
-                    <form onSubmit={handleGoToPage} className="flex items-center gap-1.5">
-                        <Input
-                            type="number"
-                            min="1"
-                            max={totalPages}
-                            value={pageInput}
-                            onChange={(e) => setPageInput(e.target.value)}
-                            onBlur={() => { if (pageInput === '') setPageInput(String(currentPage)); }} // Revert if empty
-                            className="h-8 w-16 text-center"
-                            aria-label="Nomor halaman"
-                            disabled={totalPages === 0}
-                        />
-                        <span className="text-sm text-muted-foreground">/ {totalPages}</span>
-                    </form>
-                   <Button variant="outline" size="icon" onClick={handleNextPage} disabled={!carouselApi?.canScrollNext()}>
-                       <ChevronsRight />
-                       <span className="sr-only">Halaman Berikutnya</span>
-                   </Button>
-                   <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={handleToggleBookmark}
-                      disabled={!ebook}
-                      className={cn(ebook?.bookmarkedPage === currentPage && "bg-accent text-accent-foreground")}
-                    >
-                      <Bookmark className={cn(ebook?.bookmarkedPage === currentPage && "fill-current")} />
-                      <span className="sr-only">Tandai Halaman</span>
-                   </Button>
-               </div>
-           </div>
-            <div className="flex items-center gap-2 w-1/3 justify-end pr-2">
-                <div className="flex items-center gap-2 w-48">
+       <footer className="flex flex-col md:flex-row items-center justify-between p-2 gap-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
+            {/* Page Navigation & Bookmark - Center on All Screens */}
+            <div className="flex items-center justify-center gap-2 order-1 md:w-1/3">
+                <Button variant="outline" size="icon" onClick={handlePrevPage} disabled={!carouselApi?.canScrollPrev()}>
+                    <ChevronsLeft />
+                    <span className="sr-only">Halaman Sebelumnya</span>
+                </Button>
+                <form onSubmit={handleGoToPage} className="flex items-center gap-1.5">
+                    <Input
+                        type="number"
+                        min="1"
+                        max={totalPages}
+                        value={pageInput}
+                        onChange={(e) => setPageInput(e.target.value)}
+                        onBlur={() => { if (pageInput === '') setPageInput(String(currentPage)); }}
+                        className="h-8 w-16 text-center"
+                        aria-label="Nomor halaman"
+                        disabled={totalPages === 0}
+                    />
+                    <span className="text-sm text-muted-foreground">/ {totalPages}</span>
+                </form>
+                <Button variant="outline" size="icon" onClick={handleNextPage} disabled={!carouselApi?.canScrollNext()}>
+                    <ChevronsRight />
+                    <span className="sr-only">Halaman Berikutnya</span>
+                </Button>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleToggleBookmark}
+                    disabled={!ebook}
+                    className={cn(ebook?.bookmarkedPage === currentPage && "bg-accent text-accent-foreground")}
+                >
+                    <Bookmark className={cn(ebook?.bookmarkedPage === currentPage && "fill-current")} />
+                    <span className="sr-only">Tandai Halaman</span>
+                </Button>
+            </div>
+
+            {/* Spacer for Desktop */}
+            <div className="hidden md:flex md:w-1/3 order-2"></div>
+
+            {/* Zoom & Magnifier Controls */}
+            <div className="flex items-center justify-center md:justify-end gap-2 order-2 md:order-3 w-full md:w-1/3">
+                {/* Mobile Zoom Buttons */}
+                <div className="flex md:hidden items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={handleZoomOut}><ZoomOut /></Button>
+                    <span className="text-sm font-medium w-16 text-center">{Math.round(zoomLevel * 100)}%</span>
+                    <Button variant="outline" size="icon" onClick={handleZoomIn}><ZoomIn /></Button>
+                </div>
+                
+                {/* Desktop Zoom Slider */}
+                <div className="hidden md:flex items-center gap-2 w-48">
                     <ZoomOut className="text-muted-foreground" />
                     <Slider
                         value={[zoomLevel]}
                         min={0.2}
-                        max={2}
+                        max={3}
                         step={0.1}
                         onValueChange={handleZoomChange}
                         className="w-full"
                     />
                     <ZoomIn className="text-muted-foreground" />
                 </div>
-                <span className="text-sm font-medium w-16 text-center">{Math.round(zoomLevel * 100)}%</span>
+                <span className="hidden md:inline-block text-sm font-medium w-16 text-center">{Math.round(zoomLevel * 100)}%</span>
+
+                {/* Magnifier Button */}
                 <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsMagnifierEnabled(prev => !prev)}
-                  className={cn(isMagnifierEnabled && "bg-accent text-accent-foreground")}
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setIsMagnifierEnabled(prev => !prev)}
+                    className={cn(isMagnifierEnabled && "bg-accent text-accent-foreground")}
                 >
-                  <MagnifyIcon />
-                  <span className="sr-only">Aktifkan Kaca Pembesar</span>
+                    <MagnifyIcon />
+                    <span className="sr-only">Aktifkan Kaca Pembesar</span>
                 </Button>
-           </div>
+            </div>
        </footer>
      </div>
    );
