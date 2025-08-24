@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -10,6 +11,7 @@ import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from './ui/skeleton';
 import PdfMagnifier from './pdf-magnifier';
+import { cn } from '@/lib/utils';
 
 // Mengatur workerSrc untuk react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -34,6 +36,10 @@ export default function PdfViewer({
   
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
   const [pageContainerRef, setPageContainerRef] = useState<HTMLDivElement | null>(null);
+
+  const [isPanning, setIsPanning] = useState(false);
+  const [startCoords, setStartCoords] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+
 
   const onDocumentLoadSuccess = useCallback(({ numPages: nextNumPages }: PDFDocumentProxy): void => {
     setNumPages(nextNumPages);
@@ -60,26 +66,68 @@ export default function PdfViewer({
     console.error("Error rendering page:", error);
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isMagnifierEnabled) return;
-    const pageDiv = e.currentTarget.firstChild as HTMLDivElement;
-    if (pageDiv) {
-      const pageRect = pageDiv.getBoundingClientRect();
-       setMousePosition({
-         x: e.clientX - pageRect.left,
-         y: e.clientY - pageRect.top,
-       });
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (zoomLevel <= 1 || isMagnifierEnabled) return;
+    setIsPanning(true);
+    const target = e.currentTarget;
+    setStartCoords({
+      x: e.pageX - target.offsetLeft,
+      y: e.pageY - target.offsetTop,
+      scrollLeft: target.scrollLeft,
+      scrollTop: target.scrollTop,
+    });
+    target.style.cursor = 'grabbing';
+  };
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsPanning(false);
+    if (zoomLevel > 1 && !isMagnifierEnabled) {
+      e.currentTarget.style.cursor = 'grab';
+    } else {
+      e.currentTarget.style.cursor = 'default';
     }
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isPanning) {
+      setIsPanning(false);
+      if (zoomLevel > 1 && !isMagnifierEnabled) {
+        e.currentTarget.style.cursor = 'grab';
+      } else {
+        e.currentTarget.style.cursor = 'default';
+      }
+    }
     if (isMagnifierEnabled) {
       setMousePosition(null);
     }
   };
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isMagnifierEnabled) {
+      const pageDiv = pageContainerRef;
+      if (pageDiv) {
+        const pageRect = pageDiv.getBoundingClientRect();
+        setMousePosition({
+          x: e.clientX - pageRect.left,
+          y: e.clientY - pageRect.top,
+        });
+      }
+    }
+
+    if (!isPanning) return;
+    const target = e.currentTarget;
+    const x = e.pageX - target.offsetLeft;
+    const y = e.pageY - target.offsetTop;
+    const walkX = (x - startCoords.x);
+    const walkY = (y - startCoords.y);
+    target.scrollLeft = startCoords.scrollLeft - walkX;
+    target.scrollTop = startCoords.scrollTop - walkY;
+  };
+  
+
   const getCursorStyle = () => {
     if (isMagnifierEnabled) return 'none';
+    if (zoomLevel > 1) return 'grab';
     return 'default';
   };
 
@@ -108,6 +156,8 @@ export default function PdfViewer({
                         <CarouselItem key={`page_${index + 1}`} className="h-full w-full">
                             <div 
                                 className="w-full h-full overflow-auto flex items-center justify-center"
+                                onMouseDown={handleMouseDown}
+                                onMouseUp={handleMouseUp}
                                 onMouseMove={handleMouseMove}
                                 onMouseLeave={handleMouseLeave}
                                 style={{ cursor: getCursorStyle() }}
