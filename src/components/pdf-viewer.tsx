@@ -151,7 +151,7 @@ export default function PdfViewer({
                     {Array.from(new Array(numPages), (el, index) => (
                         <CarouselItem key={`page_${index + 1}`} className="h-full w-full">
                             <div 
-                                className="w-full h-full overflow-auto flex items-center justify-center"
+                                className="w-full h-full overflow-auto flex justify-center"
                                 style={{ cursor: getCursorStyle() }}
                                 onMouseDown={handleMouseDown}
                                 onMouseUp={handleMouseUp}
