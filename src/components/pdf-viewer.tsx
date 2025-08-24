@@ -75,7 +75,7 @@ export default function PdfViewer({
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (zoomLevel <= 1 || isMagnifierEnabled) return;
+    if (isMagnifierEnabled) return;
     e.preventDefault(); // Prevent text selection
     setIsPanning(true);
     const target = e.currentTarget;
@@ -90,20 +90,20 @@ export default function PdfViewer({
 
   const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
     setIsPanning(false);
-    if (zoomLevel > 1 && !isMagnifierEnabled) {
+    if (!isMagnifierEnabled) {
       e.currentTarget.style.cursor = 'grab';
     } else {
-      e.currentTarget.style.cursor = 'default';
+      e.currentTarget.style.cursor = 'none';
     }
   };
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isPanning) {
       setIsPanning(false);
-      if (zoomLevel > 1 && !isMagnifierEnabled) {
+      if (!isMagnifierEnabled) {
         e.currentTarget.style.cursor = 'grab';
       } else {
-        e.currentTarget.style.cursor = 'default';
+        e.currentTarget.style.cursor = 'none';
       }
     }
     if (isMagnifierEnabled) {
@@ -133,8 +133,7 @@ export default function PdfViewer({
 
   const getCursorStyle = () => {
     if (isMagnifierEnabled) return 'none';
-    if (zoomLevel > 1) return 'grab';
-    return 'default';
+    return 'grab';
   };
 
   return (
@@ -171,19 +170,17 @@ export default function PdfViewer({
                                 <div
                                   style={{
                                     height: pageDimensions ? `${pageDimensions.height * zoomLevel}px` : '100%',
-                                    width: pageDimensions ? `${pageDimensions.width * zoomLevel}px` : '100%',
-                                    margin: 'auto',
+                                    width: '100%',
                                     display: 'flex',
-                                    alignItems: 'center',
                                   }}
-                                  className="justify-center"
+                                  className="items-center justify-center"
                                 >
                                   <div 
                                     ref={setPageContainerRef}
-                                    className="relative flex justify-center"
+                                    className="relative"
                                     style={{
-                                      transform: `scale(${zoomLevel})`,
-                                      transformOrigin: 'center',
+                                      width: pageDimensions ? `${pageDimensions.width * zoomLevel}px` : 'auto',
+                                      height: pageDimensions ? `${pageDimensions.height * zoomLevel}px` : 'auto',
                                     }}
                                   >
                                       <Page
@@ -193,6 +190,7 @@ export default function PdfViewer({
                                           className="shadow-lg"
                                           onRenderError={onPageRenderError}
                                           onLoadSuccess={onPageLoadSuccess}
+                                          scale={zoomLevel}
                                       />
                                       {isMagnifierEnabled && pageContainerRef && mousePosition && (
                                         <PdfMagnifier
@@ -218,3 +216,4 @@ export default function PdfViewer({
     </div>
   );
 }
+ 
