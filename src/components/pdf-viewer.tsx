@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -71,6 +72,12 @@ export default function PdfViewer({
     });
     console.error("Error rendering page:", error);
   }, [toast]);
+  
+  const onTextLayerRenderError = useCallback((error: Error) => {
+    if (error.name === 'AbortException') return;
+     console.error("Error rendering text layer:", error);
+  }, []);
+
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (isMagnifierEnabled) return;
@@ -173,7 +180,9 @@ export default function PdfViewer({
                        >
                           <Page
                             pageNumber={index + 1}
-                            renderTextLayer={true}
+                            renderTextLayer={{
+                                onRenderError: onTextLayerRenderError,
+                            }}
                             renderAnnotationLayer={false}
                             className="shadow-lg"
                             onRenderError={onPageRenderError}
