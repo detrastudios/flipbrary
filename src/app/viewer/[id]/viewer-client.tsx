@@ -5,8 +5,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut, Search as MagnifyIcon } from "lucide-react";
-import { useIndexedDB } from "@/hooks/use-indexed-db";
+import { ChevronsLeft, ChevronsRight, ZoomIn, ZoomOut, Search as MagnifyIcon, Bookmark } from "lucide-react";
+import { useIndexedDB, Ebook } from "@/hooks/use-indexed-db";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -28,14 +28,14 @@ type ViewerPageProps = {
 
 export default function ViewerPageClient({ id }: ViewerPageProps) {
   const { toast } = useToast();
-  const { getEbookById } = useIndexedDB();
+  const { getEbookById, updateEbook } = useIndexedDB();
   const viewerContainerRef = useRef<HTMLDivElement>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageInput, setPageInput] = useState("1");
   const [totalPages, setTotalPages] = useState(0);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
-  const [ebookId, setEbookId] = useState<number | null>(null);
+  const [ebook, setEbook] = useState<Ebook | null>(null);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [isMagnifierEnabled, setIsMagnifierEnabled] = useState(false);
@@ -45,33 +45,30 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
     if (id) {
         const parsedId = parseInt(id, 10);
         if (!isNaN(parsedId)) {
-            setEbookId(parsedId);
+            getEbookById(parsedId).then(ebookData => {
+                if (ebookData) {
+                    setEbook(ebookData);
+                    if (ebookData.data instanceof Blob) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            setPdfDataUri(e.target?.result as string);
+                        };
+                        reader.readAsDataURL(ebookData.data);
+                    }
+                } else {
+                    toast({
+                        variant: "destructive",
+                        title: "Ebook tidak ditemukan",
+                        description: "Tidak dapat menemukan ebook di library Anda.",
+                    });
+                }
+            });
         }
     }
-  }, [id]);
+  }, [id, getEbookById, toast]);
 
   useEffect(() => {
-    if (ebookId !== null) {
-        getEbookById(ebookId).then(ebook => {
-            if (ebook && ebook.data instanceof Blob) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    setPdfDataUri(e.target?.result as string);
-                };
-                reader.readAsDataURL(ebook.data);
-            } else if (!ebook) {
-                toast({
-                    variant: "destructive",
-                    title: "Ebook tidak ditemukan",
-                    description: "Tidak dapat menemukan ebook di library Anda.",
-                });
-            }
-        });
-    }
-  }, [ebookId, getEbookById, toast]);
-
-  useEffect(() => {
-    if (!carouselApi) return;
+    if (!carouselApi || !ebook) return;
 
     const onSelect = () => {
       const newPage = carouselApi.selectedScrollSnap() + 1;
@@ -79,13 +76,17 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
       setPageInput(String(newPage));
     };
 
+    if (ebook.bookmarkedPage && totalPages > 0) {
+        carouselApi.scrollTo(ebook.bookmarkedPage - 1, true);
+    }
+    
     carouselApi.on("select", onSelect);
     onSelect(); 
 
     return () => {
       carouselApi.off("select", onSelect);
     };
-  }, [carouselApi]);
+  }, [carouselApi, ebook, totalPages]);
   
   const handleDimensionsReady = useCallback((pageDimensions: { width: number; height: number }) => {
     if (initialZoomCalculated || !viewerContainerRef.current) return;
@@ -132,6 +133,25 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
   const handleZoomChange = (value: number[]) => {
     setZoomLevel(value[0]);
   };
+  
+  const handleToggleBookmark = async () => {
+    if (!ebook || !updateEbook) return;
+
+    const newBookmarkedPage = ebook.bookmarkedPage === currentPage ? undefined : currentPage;
+    
+    const updatedEbook = await updateEbook(ebook.id, { bookmarkedPage: newBookmarkedPage });
+    
+    if (updatedEbook) {
+      setEbook(updatedEbook);
+      toast({
+        title: newBookmarkedPage ? "Halaman ditandai" : "Tanda dihapus",
+        description: newBookmarkedPage 
+          ? `Halaman ${currentPage} telah ditandai.`
+          : `Tanda pada halaman ${currentPage} telah dihapus.`,
+      });
+    }
+  };
+
 
   return (
     <div className="h-[calc(100vh-57px)] w-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
@@ -146,31 +166,12 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
          />
        </div>
 
-       <footer className="flex items-center justify-center p-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
-           <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 w-48">
-                    <ZoomOut className="text-muted-foreground" />
-                    <Slider
-                        value={[zoomLevel]}
-                        min={0.2}
-                        max={2}
-                        step={0.1}
-                        onValueChange={handleZoomChange}
-                        className="w-full"
-                    />
-                    <ZoomIn className="text-muted-foreground" />
-                    <span className="text-sm font-medium w-16 text-center">{Math.round(zoomLevel * 100)}%</span>
-                </div>
+       <footer className="flex items-center justify-between p-2 border-t bg-background/80 backdrop-blur-sm z-20 shadow-sm flex-shrink-0">
+           <div className="flex items-center gap-4 w-1/3">
+                {/* Placeholder */}
+           </div>
+           <div className="flex items-center justify-center gap-4 w-1/3">
                <div className="flex items-center gap-2">
-                   <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setIsMagnifierEnabled(prev => !prev)}
-                      className={cn(isMagnifierEnabled && "bg-accent text-accent-foreground")}
-                    >
-                      <MagnifyIcon />
-                      <span className="sr-only">Aktifkan Kaca Pembesar</span>
-                   </Button>
                    <Button variant="outline" size="icon" onClick={handlePrevPage} disabled={!carouselApi?.canScrollPrev()}>
                        <ChevronsLeft />
                        <span className="sr-only">Halaman Sebelumnya</span>
@@ -193,7 +194,41 @@ export default function ViewerPageClient({ id }: ViewerPageProps) {
                        <ChevronsRight />
                        <span className="sr-only">Halaman Berikutnya</span>
                    </Button>
+                   <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleToggleBookmark}
+                      disabled={!ebook}
+                      className={cn(ebook?.bookmarkedPage === currentPage && "bg-accent text-accent-foreground")}
+                    >
+                      <Bookmark className={cn(ebook?.bookmarkedPage === currentPage && "fill-current")} />
+                      <span className="sr-only">Tandai Halaman</span>
+                   </Button>
                </div>
+           </div>
+            <div className="flex items-center gap-2 w-1/3 justify-end pr-2">
+                <div className="flex items-center gap-2 w-48">
+                    <ZoomOut className="text-muted-foreground" />
+                    <Slider
+                        value={[zoomLevel]}
+                        min={0.2}
+                        max={2}
+                        step={0.1}
+                        onValueChange={handleZoomChange}
+                        className="w-full"
+                    />
+                    <ZoomIn className="text-muted-foreground" />
+                </div>
+                <span className="text-sm font-medium w-16 text-center">{Math.round(zoomLevel * 100)}%</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsMagnifierEnabled(prev => !prev)}
+                  className={cn(isMagnifierEnabled && "bg-accent text-accent-foreground")}
+                >
+                  <MagnifyIcon />
+                  <span className="sr-only">Aktifkan Kaca Pembesar</span>
+                </Button>
            </div>
        </footer>
      </div>

@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Upload, BookOpen, Trash2, LoaderCircle, BookMarked, Star } from "lucide-react";
+import { Upload, BookOpen, Trash2, LoaderCircle, Star, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useIndexedDB, Ebook } from "@/hooks/use-indexed-db";
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 export default function LibraryClient() {
   const { toast } = useToast();
@@ -64,7 +65,7 @@ export default function LibraryClient() {
     setIsUploading(true);
 
     try {
-        const newEbook: Omit<Ebook, 'id' | 'thumbnailUrl' | 'isFavorite'> = {
+        const newEbook: Omit<Ebook, 'id' | 'thumbnailUrl' | 'isFavorite' | 'bookmarkedPage'> = {
             name: newEbookName.trim(),
             data: selectedFile,
         };
@@ -186,7 +187,7 @@ export default function LibraryClient() {
             {ebooks.map((ebook) => (
               <div key={ebook.id} className="group relative transition-all duration-300 hover:scale-105 hover:shadow-2xl rounded-lg">
                 <Link href={`/viewer/${ebook.id}`} className="block text-center">
-                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center p-1 shadow-md transition-all duration-300 group-hover:shadow-xl overflow-hidden">
+                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center p-1 shadow-md transition-all duration-300 group-hover:shadow-xl overflow-hidden relative">
                     {ebook.thumbnailUrl ? (
                       <Image 
                         src={ebook.thumbnailUrl} 
@@ -197,6 +198,11 @@ export default function LibraryClient() {
                       />
                     ) : (
                       <BookOpen className="w-12 h-12 text-muted-foreground" />
+                    )}
+                    {ebook.bookmarkedPage && (
+                      <div className="absolute top-0 right-0 bg-primary text-primary-foreground p-1 rounded-bl-lg">
+                        <Bookmark className="h-4 w-4 fill-current" />
+                      </div>
                     )}
                   </div>
                   <p className="mt-2 text-sm font-medium truncate px-1" title={ebook.name}>
@@ -210,7 +216,7 @@ export default function LibraryClient() {
                   onClick={(e) => handleToggleFavorite(e, ebook)}
                   aria-label="Favoritkan Ebook"
                 >
-                  <Star className={ebook.isFavorite ? "fill-current" : ""} />
+                  <Star className={cn(ebook.isFavorite ? "fill-current" : "")} />
                 </Button>
                 <Button
                   variant="destructive"

@@ -6,21 +6,22 @@ import { openDB, IDBPDatabase, DBSchema } from 'idb';
 
 const DB_NAME = 'EbookLibraryDB';
 const STORE_NAME = 'ebooks';
-const DB_VERSION = 3; // Version incremented for schema change
+const DB_VERSION = 4; // Version incremented for schema change
 
 export interface Ebook {
   id: number;
   name: string;
   data: File | Blob;
   thumbnailUrl?: string;
-  isFavorite?: boolean; // New property
+  isFavorite?: boolean;
+  bookmarkedPage?: number;
 }
 
 interface EbookDB extends DBSchema {
   [STORE_NAME]: {
     key: number;
     value: Ebook;
-    indexes: { name: string; isFavorite: 'isFavorite' }; // New index
+    indexes: { name: string; isFavorite: 'isFavorite' };
   };
 }
 
@@ -106,7 +107,7 @@ export function useIndexedDB() {
     getAllEbooks();
   }, [getAllEbooks]);
 
-  const addEbook = async (ebook: Omit<Ebook, 'id' | 'thumbnailUrl' | 'isFavorite'>) => {
+  const addEbook = async (ebook: Omit<Ebook, 'id' | 'thumbnailUrl' | 'isFavorite' | 'bookmarkedPage'>) => {
     const db = await getDb();
     if (!db) return;
     const thumbnailUrl = await createPdfThumbnail(ebook.data);
@@ -128,18 +129,21 @@ export function useIndexedDB() {
     return db.get(STORE_NAME, id);
   }, []);
 
-  const toggleFavorite = async (id: number, isFavorite: boolean) => {
+  const updateEbook = async (id: number, updates: Partial<Ebook>) => {
     const db = await getDb();
     if (!db) return;
     const ebook = await db.get(STORE_NAME, id);
     if (ebook) {
-      ebook.isFavorite = isFavorite;
-      await db.put(STORE_NAME, ebook);
-      await getAllEbooks(); // Refresh list
+      const updatedEbook = { ...ebook, ...updates };
+      await db.put(STORE_NAME, updatedEbook);
+      await getAllEbooks();
+      return updatedEbook;
     }
   };
 
-  return { ebooks, addEbook, deleteEbook, getEbookById, loading, toggleFavorite };
-}
+  const toggleFavorite = async (id: number, isFavorite: boolean) => {
+    await updateEbook(id, { isFavorite });
+  };
 
-    
+  return { ebooks, addEbook, deleteEbook, getEbookById, loading, toggleFavorite, updateEbook };
+}
