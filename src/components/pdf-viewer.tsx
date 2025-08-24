@@ -65,7 +65,7 @@ export default function PdfViewer({
   }, []);
 
   const onPageRenderError = (error: Error) => {
-    if (error.name === 'AbortException') return;
+    if (error.name === 'AbortException') return; // Suppress AbortException warning
     toast({
         variant: "destructive",
         title: "Gagal merender halaman",
@@ -166,17 +166,21 @@ export default function PdfViewer({
                             > 
                                 <div 
                                   ref={setPageContainerRef}
-                                  className="relative p-4 flex items-center justify-center"
+                                  className={cn(
+                                    "relative p-4 flex",
+                                    zoomLevel > 1 ? 'items-start' : 'items-center'
+                                  )}
                                   style={{
-                                      width: zoomLevel > 1 ? `${(containerWidth-32) * zoomLevel}px` : '100%',
-                                      height: zoomLevel > 1 ? 'auto' : '100%'
+                                    width: zoomLevel > 1 ? `${(containerWidth-32) * zoomLevel}px` : '100%',
+                                    height: '100%',
+                                    justifyContent: 'center',
                                   }}
                                 >
                                     <Page
                                         pageNumber={index + 1}
                                         renderTextLayer={true}
                                         renderAnnotationLayer={false}
-                                        className="shadow-lg mx-auto"
+                                        className="shadow-lg"
                                         scale={zoomLevel}
                                         onRenderError={onPageRenderError}
                                         onRenderSuccess={onPageRenderSuccess}
