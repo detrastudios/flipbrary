@@ -53,6 +53,7 @@ export default function PdfViewer({
   }, [setTotalPagesProp]);
 
   const onPageLoadSuccess = useCallback((page: PDFPageProxy) => {
+    // Only set dimensions if they haven't been set yet
     if (!pageDimensions) {
       const viewport = page.getViewport({ scale: 1 });
       setPageDimensions({ width: viewport.width, height: viewport.height });
@@ -60,7 +61,7 @@ export default function PdfViewer({
   }, [pageDimensions]);
 
   function onDocumentLoadError(error: Error) {
-    if (error.name === 'AbortException') return;
+    if (error.name === 'AbortException') return; // Ignore abort errors
     toast({
       variant: "destructive",
       title: "Gagal memuat PDF",
@@ -80,6 +81,7 @@ export default function PdfViewer({
   }, [toast]);
   
   const onTextLayerRenderError = useCallback((error: Error) => {
+    // This error happens when quickly zooming or navigating. It's safe to ignore.
     if (error.name === 'AbortException') return;
      console.error("Error rendering text layer:", error);
   }, []);
@@ -118,17 +120,21 @@ export default function PdfViewer({
                 {Array.from(new Array(numPages), (el, index) => (
                   <CarouselItem key={`page_${index + 1}`} className="h-full w-full">
                     <div
-                      className="w-full h-full overflow-auto hide-scrollbar flex items-start justify-center"
+                      className={cn(
+                        "w-full h-full overflow-auto hide-scrollbar",
+                        zoomLevel > 1 ? "flex items-start justify-center" : "flex items-center justify-center"
+                      )}
                       onMouseMove={handleMouseMove}
                       onMouseLeave={() => setMousePosition(null)}
                       style={{ cursor: isMagnifierEnabled ? 'none' : 'default' }}
                     >
                       <div
                         ref={pageContainerRef}
-                        className="relative p-4"
+                        className="relative"
                         style={{
-                          width: pageDimensions ? `${pageDimensions.width * zoomLevel}px` : 'auto',
-                          height: pageDimensions ? `${pageDimensions.height * zoomLevel}px` : 'auto',
+                          // This div will still grow based on zoom to trigger overflow
+                           width: pageDimensions ? `${pageDimensions.width * zoomLevel}px` : 'auto',
+                           height: pageDimensions ? `${pageDimensions.height * zoomLevel}px` : 'auto',
                         }}
                       >
                         <Page
