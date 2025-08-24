@@ -34,7 +34,7 @@ export default function PdfViewer({
   const [numPages, setNumPages] = useState(0);
 
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
-  const pageContainerRef = useRef<HTMLDivElement | null>(null); // Use useRef for the page container
+  const pageContainerRef = useRef<HTMLDivElement | null>(null);
 
   const [isPanning, setIsPanning] = useState(false);
   const [startCoords, setStartCoords] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
@@ -76,33 +76,27 @@ export default function PdfViewer({
     if (isMagnifierEnabled) return;
     e.preventDefault();
     setIsPanning(true);
-    const container = pageContainerRef.current?.parentElement;
-    if (container) {
-      setStartCoords({
-        x: e.clientX,
-        y: e.clientY,
-        scrollLeft: container.scrollLeft,
-        scrollTop: container.scrollTop,
-      });
-      container.style.cursor = 'grabbing';
-    }
+    const container = e.currentTarget;
+    setStartCoords({
+      x: e.clientX,
+      y: e.clientY,
+      scrollLeft: container.scrollLeft,
+      scrollTop: container.scrollTop,
+    });
+    container.style.cursor = 'grabbing';
   }, [isMagnifierEnabled]);
 
   const handleMouseUp = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     setIsPanning(false);
-    const container = pageContainerRef.current?.parentElement;
-    if (container) {
-      container.style.cursor = isMagnifierEnabled ? 'none' : 'grab';
-    }
+    const container = e.currentTarget;
+    container.style.cursor = isMagnifierEnabled ? 'none' : 'grab';
   }, [isMagnifierEnabled]);
 
   const handleMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (isPanning) {
       setIsPanning(false);
-      const container = pageContainerRef.current?.parentElement;
-      if (container) {
-        container.style.cursor = isMagnifierEnabled ? 'none' : 'grab';
-      }
+      const container = e.currentTarget;
+      container.style.cursor = isMagnifierEnabled ? 'none' : 'grab';
     }
     if (isMagnifierEnabled) {
       setMousePosition(null);
@@ -110,7 +104,7 @@ export default function PdfViewer({
   }, [isPanning, isMagnifierEnabled]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const container = pageContainerRef.current?.parentElement;
+    const container = e.currentTarget;
     if (isMagnifierEnabled) {
       const pageRect = pageContainerRef.current?.getBoundingClientRect();
       if (pageRect) {
@@ -158,7 +152,7 @@ export default function PdfViewer({
               {Array.from(new Array(numPages), (el, index) => (
                 <CarouselItem key={`page_${index + 1}`} className="h-full w-full">
                   <div
-                    className="w-full h-full overflow-auto flex items-center justify-center" // Ensure flexbox is here
+                    className="w-full h-full overflow-auto flex items-start justify-center" // Ubah items-center menjadi items-start
                     onMouseDown={handleMouseDown}
                     onMouseUp={handleMouseUp}
                     onMouseMove={handleMouseMove}
@@ -167,7 +161,7 @@ export default function PdfViewer({
                   >
                     <div
                       ref={pageContainerRef}
-                      className="relative"
+                      className="relative p-4" // Tambahkan padding di sini
                       style={{
                         width: pageDimensions ? `${pageDimensions.width * zoomLevel}px` : 'auto',
                         height: pageDimensions ? `${pageDimensions.height * zoomLevel}px` : 'auto',
